@@ -195,3 +195,36 @@ class TestMrpWeighing(TransactionCase):
         picking.with_context(skip_backorder=True, skip_expired=True).button_validate()
         self.assertEqual(picking.state, "done")
         self.assertEqual(production.state, "done")
+
+    def test_weighing_production_finished_move(self):
+        self.env["stock.quant"]._update_available_quantity(
+            self.component,
+            self.env.ref("stock.stock_location_stock"),
+            10,
+            lot_id=self.component_lot_1,
+        )
+        production_form = Form(self.env["mrp.production"])
+        production_form.product_id = self.product
+        production_form.product_qty = 5
+        production = production_form.save()
+        production.action_confirm()
+        production.action_generate_serial()
+        finished_move = production.move_finished_ids.filtered(
+            lambda move: move.product_id == self.product
+        )
+        action = finished_move.action_add_move_line()
+        wizard = (
+            self.env["weighing.wizard"]
+            .with_context(**action["context"])
+            .create({"weight": 4.3})
+        )
+        wizard.add_operation_and_record()
+        self.assertEqual(4.3, production.qty_producing)
+        # The weighed quantity prevails over a different quantity to produce
+        production.qty_producing = 5
+        production.with_context(
+            skip_backorder=True, skip_consumption=True, skip_expired=True
+        ).button_mark_done()
+        self.assertEqual(production.state, "done")
+        self.assertEqual(4.3, production.qty_producing)
+        self.assertEqual(4.3, finished_move.quantity)
