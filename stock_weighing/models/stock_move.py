@@ -52,10 +52,19 @@ class StockMove(models.Model):
         readonly=False,
     )
 
-    @api.depends("move_line_ids.qty_picked")
+    @api.depends(
+        "move_line_ids.qty_picked", "move_line_ids.product_uom_id", "product_uom"
+    )
     def _compute_qty_picked(self):
+        # The move quantity is in the move unit, like quantity, while each line
+        # can be in another unit of the same category
         for move in self:
-            move.qty_picked = sum(move.move_line_ids.mapped("qty_picked"))
+            move.qty_picked = sum(
+                line.product_uom_id._compute_quantity(
+                    line.qty_picked, move.product_uom, round=False
+                )
+                for line in move.move_line_ids
+            )
 
     @api.depends()
     @api.depends_context("weight_operation_details")
