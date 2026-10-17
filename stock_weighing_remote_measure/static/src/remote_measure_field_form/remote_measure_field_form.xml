@@ -1,13 +1,13 @@
-<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <templates id="template" xml:space="preserve">
     <t t-name="stock_weighing_remote_measure.RemoteMeasureForm">
-        <div class="container" t-if="this.remote_device_data">
+        <div t-if="this.remote_device_data" class="container">
             <div class="row">
                 <div class="col-12 border-dark p-2 rounded border ms-0" name="display">
                     <div
-                        name="tare_infos"
                         t-if="props.tares.length"
                         class="text-start ms-1 text-info me-1 w-100"
+                        name="tare_infos"
                     >
                         <i class="fa fa-level-down" /> TARE:
                         <span
@@ -58,14 +58,14 @@
                             <i t-attf-class="fa fa-plus" role="img" />
                         </span>
                         <input
+                            t-att-id="props.id"
+                            class="o_input border-0"
                             t-on-focusin="onFocusIn"
                             t-on-focusout="onFocusOut"
-                            t-att-id="props.id"
                             t-ref="numpadDecimal"
                             t-att-placeholder="props.placeholder"
                             t-att-type="props.inputType"
                             inputmode="decimal"
-                            class="o_input border-0"
                             autocomplete="off"
                             t-att-step="props.step"
                         />
