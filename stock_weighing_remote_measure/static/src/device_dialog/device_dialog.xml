@@ -4,15 +4,13 @@
         <Dialog size="'md'" footer="false" title.translate="Choose a device">
             <div>
                 <button
-                    t-foreach="devices"
+                    t-foreach="this.devices"
                     t-as="device"
                     t-key="device.id"
-                    t-att-data-device_id="device.id"
                     class="btn btn-dark w-100 mb-2"
-                    t-on-click.prevent="onClickDevice"
-                >
-                    <t t-esc="device.name" />
-                </button>
+                    t-on-click.prevent="() => this.onClickDevice(device)"
+                    t-out="device.name"
+                />
             </div>
         </Dialog>
     </t>

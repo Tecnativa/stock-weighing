@@ -13,8 +13,9 @@
                     role="alert"
                 >
                     <span><i
-                        class="fa fa-info-circle"
-                        role="image"
+                        class="oi"
+                        data-icon="info"
+                        role="img"
                     /> You need to configure a default remote device in your user preferences to be able to start measuring remotely</span>
                 </div>
             </field>

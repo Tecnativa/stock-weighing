@@ -1,35 +1,37 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <templates id="template" xml:space="preserve">
     <t t-name="stock_weighing_remote_measure.RemoteMeasureForm">
-        <div t-if="this.remote_device_data" class="container">
+        <div t-if="this.hasDevice" class="container">
             <div class="row">
                 <div class="col-12 border-dark p-2 rounded border ms-0" name="display">
                     <div
-                        t-if="props.tares.length"
+                        t-if="this.props.tares.length"
                         class="text-start ms-1 text-info me-1 w-100"
                         name="tare_infos"
                     >
-                        <i class="fa fa-level-down" /> TARE:
+                        TARE:
                         <span
                         name="tare_amount"
                         class="fw-bold text-danger"
-                        t-out="this.formatFloat(this.state.tare)"
+                        t-out="this.formatFloat(this.measureState.tare)"
                     />
-                        <span t-out="this.uom.name" class="text-danger me-1" />
-                        <i class="fa fa-caret-square-o-right" /> REAL: <span
+                        <span class="text-danger me-1" t-out="this.uomName" />
+                        REAL:
+                        <span
                         name="real_amount"
                         class="text-success fw-bold"
-                        t-out="this.formatFloat(this.state.input_val)"
-                    /> <span t-out="this.uom.name" class="text-success" />
+                        t-out="this.formatFloat(this.measureState.input_val)"
+                    />
+                        <span class="text-success" t-out="this.uomName" />
                         <div
                         class="text-dark d-inline float-end"
                         title="Device info"
                         name="device_selector"
                         role="button"
-                        t-on-click.prevent="onDeviceSelector"
+                        t-on-click.prevent="this.onDeviceSelector"
                     >
-                        <i class="fa fa-thermometer me-1" />
-                        <span t-out="this.state.device_name" />
+                        <i class="oi me-1" data-icon="device_thermostat" />
+                        <span t-out="this.measureState.device_name" />
                     </div>
                     </div>
                     <div
@@ -37,73 +39,83 @@
                         class="d-flex justify-content-around align-items-center w-100"
                     >
                         <span
-                            t-if="this.state.stop"
+                            t-if="this.measureState.stop"
                             class="o_field_remote_device_start btn btn-primary btn-lg"
-                            t-on-click.prevent="onMeasure"
+                            title="Measure"
+                            t-on-click.prevent="this.onMeasure"
                         >
-                            <i t-attf-class="fa {{this.state.icon}}" role="img" />
+                            <i class="oi" data-icon="device_thermostat" role="img" />
                         </span>
                         <span
-                            t-elif="!this.state.stop"
-                            t-attf-class="o_field_remote_device_stop btn btn-lg {{ this.state.class }}"
-                            t-on-click.prevent="onValidateMeasure"
+                            t-else=""
+                            class="o_field_remote_device_stop btn btn-lg"
+                            t-att-class="this.measureState.class"
+                            title="Validate the measure"
+                            t-on-click.prevent="this.onValidateMeasure"
                         >
-                            <i t-attf-class="fa {{this.state.icon}}" role="img" />
+                            <i
+                                class="oi"
+                                t-att-class="{'opacity-50': this.measureState.tick}"
+                                data-icon="device_thermostat"
+                                role="img"
+                            />
                         </span>
                         <span
-                            t-if="this.state.additive_measure"
+                            t-if="this.measureState.additive_measure"
                             class="o_field_remote_device_start btn btn-link btn-sm"
-                            t-on-click.prevent="onMeasureAdd"
+                            title="Add a measure"
+                            t-on-click.prevent="this.onMeasureAdd"
                         >
-                            <i t-attf-class="fa fa-plus" role="img" />
+                            <i class="oi" data-icon="add" role="img" />
                         </span>
                         <input
-                            t-att-id="props.id"
+                            t-att-id="this.props.id"
                             class="o_input border-0"
-                            t-on-focusin="onFocusIn"
-                            t-on-focusout="onFocusOut"
-                            t-ref="numpadDecimal"
-                            t-att-placeholder="props.placeholder"
-                            t-att-type="props.inputType"
+                            t-on-focusin="this.onFocusIn"
+                            t-on-focusout="this.onFocusOut"
+                            t-ref="this.numpadDecimalRef"
+                            t-att-placeholder="this.props.placeholder"
+                            t-att-type="this.props.inputType"
                             inputmode="decimal"
                             autocomplete="off"
-                            t-att-step="props.step"
+                            t-att-step="this.props.step"
                         />
                     </div>
                 </div>
-                <t
-                    t-set="colors"
-                    t-value="['success', 'info', 'warning', 'danger', 'primary']"
-                />
                 <div class="pt-2 col-12 ps-0 pe-0" name="buttons">
                     <div
-                        t-foreach="props.tares"
+                        t-foreach="this.props.tares"
                         t-as="tare"
-                        class="btn-group mb-2 float-start me-2 btn-group-lg"
                         t-key="tare_index"
+                        class="btn-group mb-2 float-start me-2 btn-group-lg"
                     >
-                        <t t-set="color" t-value="colors[tare_index % colors.length]" />
-                        <btn
-                            t-attf-class="btn btn-outline-{{color}}"
-                            t-att-data-tare="tare.tare"
-                            t-on-click.prevent="onClickTare"
+                        <t
+                            t-set="color"
+                            t-value="this.colors[tare_index % this.colors.length]"
+                        />
+                        <button
+                            class="btn"
+                            t-att-class="'btn-outline-' + color"
+                            type="button"
+                            t-on-click.prevent="() => this.onClickTare(tare.tare)"
+                        >-</button>
+                        <button
+                            class="btn disabled"
+                            t-att-class="'btn-' + color"
+                            type="button"
                         >
-                            -
-                        </btn>
-                        <btn t-attf-class="btn btn-{{color}} disabled">
                             <t t-if="tare.name" t-out="tare.name" />
                             <t t-else="">
                                 <t t-out="tare.tare" />
-                                <t t-out="this.uom.name" />
+                                <t t-out="this.uomName" />
                             </t>
-                        </btn>
-                        <btn
-                            t-attf-class="btn btn-outline-{{color}}"
-                            t-attf-data-tare="-{{tare.tare}}"
-                            t-on-click.prevent="onClickTare"
-                        >
-                            +
-                        </btn>
+                        </button>
+                        <button
+                            class="btn"
+                            t-att-class="'btn-outline-' + color"
+                            type="button"
+                            t-on-click.prevent="() => this.onClickTare(-tare.tare)"
+                        >+</button>
                     </div>
                 </div>
                 <div class="pt-2 col-12 ps-0">
@@ -112,30 +124,34 @@
                             class="input-group-text text-uppercase manual_tare_label"
                         >Manual tare</span>
                         <button
-                            class="fa fa-minus btn btn-primary"
+                            class="btn btn-primary"
                             aria-label="Minus"
                             title="Minus"
                             type="button"
                             data-mode="plus"
-                            t-on-click.prevent="onClickManualTare"
-                        />
+                            t-on-click.prevent="this.onClickManualTare"
+                        >
+                            <i class="oi" data-icon="remove" />
+                        </button>
                         <input
                             type="number"
                             step="0.1"
                             inputmode="decimal"
                             class="form-control text-center"
                             aria-label="Manual tare"
-                            t-on-change="onChangeTareManualTare"
+                            t-on-change="this.onChangeTareManualTare"
                         />
                         <button
-                            class="fa fa-plus btn btn-primary"
+                            class="btn btn-primary"
                             aria-label="Plus"
                             title="Plus"
                             type="button"
                             data-mode="minus"
-                            t-on-click.prevent="onClickManualTare"
-                        />
-                        <span class="input-group-text" t-out="this.uom.name" />
+                            t-on-click.prevent="this.onClickManualTare"
+                        >
+                            <i class="oi" data-icon="add" />
+                        </button>
+                        <span class="input-group-text" t-out="this.uomName" />
                     </div>
                 </div>
             </div>
