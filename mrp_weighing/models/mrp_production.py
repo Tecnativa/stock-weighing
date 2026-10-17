@@ -39,8 +39,10 @@ class MrpProduction(models.Model):
     def _get_finished_product_move_lines(self):
         self.ensure_one()
         return self.move_finished_ids.filtered(
-            lambda move: move.product_id == self.product_id
-            and move.state not in ("done", "cancel")
+            lambda move: (
+                move.product_id == self.product_id
+                and move.state not in ("done", "cancel")
+            )
         ).move_line_ids
 
     def _set_weighed_qty_producing(self, clear_if_unweighed=False):

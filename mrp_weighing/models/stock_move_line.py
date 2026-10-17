@@ -18,8 +18,10 @@ class StockMoveLine(models.Model):
             lambda sm: sm.product_id == sm.production_id.product_id
         ).production_id._set_weighed_qty_producing(clear_if_unweighed=True)
         for move in self.move_id.filtered(
-            lambda sm: sm.move_orig_ids.production_id
-            and sm.product_id == sm.move_orig_ids.production_id.product_id
+            lambda sm: (
+                sm.move_orig_ids.production_id
+                and sm.product_id == sm.move_orig_ids.production_id.product_id
+            )
         ):
             should_consume_qty = (
                 move.move_orig_ids.production_id.move_raw_ids.should_consume_qty

@@ -70,8 +70,10 @@ class StockMoveWeightWizard(models.TransientModel):
     def _sync_production_weight(self, production):
         production.lot_producing_id = self.lot_id
         selected_component_lot = production.move_raw_ids.move_line_ids.filtered(
-            lambda line: line.product_id == self.component_quant_id.product_id
-            and line.lot_id == self.component_quant_id.lot_id
+            lambda line: (
+                line.product_id == self.component_quant_id.product_id
+                and line.lot_id == self.component_quant_id.lot_id
+            )
         )
         if not selected_component_lot:
             move_component = production.move_raw_ids.filtered(
@@ -93,9 +95,11 @@ class StockMoveWeightWizard(models.TransientModel):
         self.selected_move_line_id.selected_quant_id = self.component_quant_id
         selected_component_lot.lot_id = self.component_quant_id.lot_id
         other_component_lots = production.move_raw_ids.move_line_ids.filtered(
-            lambda line: line.product_id == self.component_quant_id.product_id
-            and line.lot_id != self.component_quant_id.lot_id
-            and line.qty_picked > 0
+            lambda line: (
+                line.product_id == self.component_quant_id.product_id
+                and line.lot_id != self.component_quant_id.lot_id
+                and line.qty_picked > 0
+            )
         )
         if other_component_lots:
             qty_done = production.move_raw_ids.should_consume_qty - sum(
