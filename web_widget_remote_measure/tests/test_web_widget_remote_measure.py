@@ -1,8 +1,9 @@
 # Copyright 2026 Tecnativa - Carlos Dauden
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
-from odoo.tests import TransactionCase
+from odoo.tests import TransactionCase, tagged
 
 
+@tagged("post_install", "-at_install")
 class TestWebWidgetRemoteMeasure(TransactionCase):
     @classmethod
     def setUpClass(cls):
@@ -20,7 +21,7 @@ class TestWebWidgetRemoteMeasure(TransactionCase):
             {
                 "name": "Plain warehouse user",
                 "login": "plain_warehouse_user",
-                "groups_id": [(6, 0, [cls.env.ref("base.group_user").id])],
+                "group_ids": [(6, 0, [cls.env.ref("base.group_user").id])],
             }
         )
 
@@ -35,3 +36,8 @@ class TestWebWidgetRemoteMeasure(TransactionCase):
             {"remote_measure_device_id": self.device.id}
         )
         self.assertEqual(self.user.remote_measure_device_id, self.device)
+
+    def test_tcp_connection_failure(self):
+        """Nothing listens on the port of the device"""
+        action = self.device.test_tcp_connection()
+        self.assertEqual(action["params"]["type"], "danger")

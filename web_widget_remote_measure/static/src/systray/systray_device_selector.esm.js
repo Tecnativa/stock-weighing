@@ -1,10 +1,9 @@
-/* @odoo-module */
 /* Copyright 2025 Tecnativa - Carlos Roca
  * License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl). */
-import {registry} from "@web/core/registry";
-import {user} from "@web/core/user";
 import {Component, onWillStart} from "@odoo/owl";
+import {registry} from "@web/core/registry";
 import {useService} from "@web/core/utils/hooks";
+import {user} from "@web/core/user";
 
 export class SelectRemoteDeviceMenu extends Component {
     static template = "web_widget_remote_measure.RemoteDeviceSelectorButton";
@@ -18,7 +17,7 @@ export class SelectRemoteDeviceMenu extends Component {
     }
 
     /**
-     * Go to user init action when clicking it
+     * Select the remote device of the user
      * @private
      */
     async onClickSelectRemoteDevice() {
@@ -30,16 +29,10 @@ export class SelectRemoteDeviceMenu extends Component {
     }
 }
 
-export const systrayRemoteDeviceSelector = {
-    Component: SelectRemoteDeviceMenu,
-};
-
 registry
     .category("systray")
     .add(
         "web_widget_remote_measure.remote_device_selector_button",
-        systrayRemoteDeviceSelector,
-        {
-            sequence: 100,
-        }
+        {Component: SelectRemoteDeviceMenu},
+        {sequence: 100}
     );

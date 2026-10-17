@@ -3,15 +3,15 @@
     <t t-name="web_widget_remote_measure.RemoteDeviceSelectorButton">
         <div class="div_remote_device_selector">
             <button
+                t-if="this.isRemoteDeviceUser"
                 name="remote_device_selector"
                 class="btn btn-link"
                 title="Select user remote device"
-                href="#"
-                t-on-click="onClickSelectRemoteDevice"
-                t-if="isRemoteDeviceUser"
+                t-on-click="this.onClickSelectRemoteDevice"
             >
                 <i
-                    class="fa fa-lg fa-balance-scale"
+                    class="oi"
+                    data-icon="balance"
                     role="img"
                     aria-label="Select user remote device"
                 />

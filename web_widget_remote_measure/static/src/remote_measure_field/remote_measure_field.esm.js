@@ -1,74 +1,72 @@
-/* global WebSocket, setTimeout */
-import {FloatField, floatField} from "@web/views/fields/float/float_field";
+/* Copyright 2023 Tecnativa - David Vidal
+ * Copyright 2026 Tecnativa - Carlos Dauden
+ * License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). */
+import {
+    FloatField,
+    floatField,
+    floatFieldProps,
+} from "@web/views/fields/float/float_field";
 import {
     onMounted,
     onWillDestroy,
     onWillStart,
     onWillUnmount,
+    proxy,
+    t,
     useEffect,
-    useState,
+    useProps,
 } from "@odoo/owl";
 import {_t} from "@web/core/l10n/translation";
 import {registry} from "@web/core/registry";
 import {rpc} from "@web/core/network/rpc";
-import {user} from "@web/core/user";
 import {useService} from "@web/core/utils/hooks";
-
-// Animate the measure steps for each measure received.
-export const nextState = {
-    "fa-thermometer-empty": "fa-thermometer-quarter",
-    "fa-thermometer-quarter": "fa-thermometer-half",
-    "fa-thermometer-half": "fa-thermometer-three-quarters",
-    "fa-thermometer-three-quarters": "fa-thermometer-full",
-    "fa-thermometer-full": "fa-thermometer-empty",
-};
+import {user} from "@web/core/user";
 
 export class RemoteMeasureField extends FloatField {
-    static props = {
-        ...FloatField.props,
-        remote_device_field: {type: String, optional: true},
-        uom_field: {type: String, optional: true},
-        default_user_device: {type: Boolean, optional: true},
-        allow_additive_measure: {type: Boolean, optional: true},
-    };
     static template = "web_widget_remote_measure.RemoteMeasureField";
+    props = useProps({
+        ...floatFieldProps,
+        remote_device_field: t.string().optional(),
+        uom_field: t.string().optional(),
+        default_user_device: t.boolean().optional(),
+        allow_additive_measure: t.boolean().optional(),
+    });
 
     setup() {
         super.setup();
         this.orm = useService("orm");
         this.amount = 0;
         this.remote_device_data = {};
-        [this.default_user_device] =
-            (this.props.default_user_device &&
-                user.settings.remote_measure_device_id) ||
-            [];
+        const setting =
+            this.props.default_user_device && user.settings.remote_measure_device_id;
+        this.default_user_device = Array.isArray(setting)
+            ? setting[0]
+            : (setting && setting.id) || setting || false;
+        const record = this.props.record;
         // When we're in the own device, we already have the data
-        if (
-            this.props.record.resModel === "remote.measure.device" &&
-            this.props.record.resId
-        ) {
-            this.remote_device_data.id = this.props.record.resId;
-            [this.uom] = this.props.record.data.uom_id;
+        if (record.resModel === "remote.measure.device" && record.resId) {
+            this.remote_device_data.id = record.resId;
+            this.uom = record.data.uom_id && {id: record.data.uom_id.id};
         } else if (this.props.remote_device_field) {
-            [this.remote_device_data.id] =
-                this.props.record.data[this.props.remote_device_field] || [];
+            const device = record.data[this.props.remote_device_field];
+            this.remote_device_data.id = device && device.id;
         } else if (this.default_user_device) {
-            [this.remote_device_data.id] = this.default_user_device;
+            this.remote_device_data.id = this.default_user_device;
         }
         if (!this.uom && this.props.uom_field) {
-            [this.uom] = this.props.record.data[this.props.uom_field] || [];
+            const uom = record.data[this.props.uom_field];
+            this.uom = uom && {id: uom.id};
         }
         this.default_ui_state = {
             stop: true,
             measuring: false,
-            icon: "fa-thermometer-half",
+            tick: false,
             // Additional class for colors and others
             class: "btn-secondary",
             input_val: this.value,
             start_add: false,
         };
-        this.state = useState({
-            ...this.state,
+        this.measureState = proxy({
             ...this.default_ui_state,
             additive_measure: false,
             device_name: false,
@@ -82,12 +80,11 @@ export class RemoteMeasureField extends FloatField {
             await this._assignDevice();
         });
         // Reset states when we leave the button
-        // TODO: Also halt any reading!
         useEffect(
             (readonly) => {
                 if (readonly) {
-                    this.state.stop = true;
-                    this.state.measuring = false;
+                    this.measureState.stop = true;
+                    this.measureState.measuring = false;
                 }
             },
             () => [this.props.readonly]
@@ -95,7 +92,7 @@ export class RemoteMeasureField extends FloatField {
         useEffect(
             (value) => {
                 if (value > 0 && this.props.allow_additive_measure) {
-                    this.state.additive_measure = true;
+                    this.measureState.additive_measure = true;
                 }
             },
             () => [this.value]
@@ -111,17 +108,31 @@ export class RemoteMeasureField extends FloatField {
         return 0;
     }
 
+    get hasDevice() {
+        return Boolean(this.remote_device_data && this.remote_device_data.id);
+    }
+
     // Private methods
 
     async _assignDevice() {
-        if (!this.remote_device_data || !this.uom) {
+        if (!this.hasDevice || !this.uom || !this.uom.id) {
             return;
         }
-        [this.uom] = await this.orm.call("uom.uom", "read", [this.uom]);
-        [this.remote_device_data] = await this.orm.call(
+        [this.uom] = await this.orm.read("uom.uom", [this.uom.id], ["factor", "name"]);
+        [this.remote_device_data] = await this.orm.read(
             "remote.measure.device",
-            "read",
-            [this.remote_device_data.id]
+            [this.remote_device_data.id],
+            [
+                "name",
+                "host",
+                "protocol",
+                "connection_mode",
+                "uom_id",
+                "uom_factor",
+                "instant_read",
+                "non_stop_read",
+                "read_interval",
+            ]
         );
         this._assigDeviceData();
     }
@@ -137,11 +148,9 @@ export class RemoteMeasureField extends FloatField {
             host: this.remote_device_data.host,
             protocol: this.remote_device_data.protocol,
             connection_mode: this.remote_device_data.connection_mode,
-            uom_category: this.uom.category_id[0],
             device_uom: this.remote_device_data.uom_id[0],
-            device_uom_category: this.remote_device_data.uom_category_id[0],
         });
-        this.state.device_name = this.remote_device_data.name;
+        this.measureState.device_name = this.remote_device_data.name;
     }
 
     /**
@@ -165,8 +174,8 @@ export class RemoteMeasureField extends FloatField {
     // UX Methods
 
     async measure() {
-        this.state.stop = false;
-        this.state.measuring = true;
+        this.measureState.stop = false;
+        this.measureState.measuring = true;
         await this[`_connect_to_${this.connection_mode}`]();
     }
     /**
@@ -174,8 +183,8 @@ export class RemoteMeasureField extends FloatField {
      */
     measure_stop() {
         this._closeSocket();
-        this.state.stop = true;
-        this.state.measuring = false;
+        this.measureState.stop = true;
+        this.measureState.measuring = false;
         this._awaitingMeasure();
         this._recordMeasure();
     }
@@ -183,11 +192,10 @@ export class RemoteMeasureField extends FloatField {
      * Start requesting measures from the remote device
      */
     onMeasure() {
-        this.state.icon = "fa-thermometer-empty";
         this.measure();
     }
     onMeasureAdd() {
-        this.state.start_add = true;
+        this.measureState.start_add = true;
         this.measure();
     }
     /**
@@ -201,39 +209,38 @@ export class RemoteMeasureField extends FloatField {
      * Once we consider the measure is stable render the button as green
      */
     _stableMeasure() {
-        this.state.class = "btn-success";
+        this.measureState.class = "btn-success";
     }
     /**
      * While a measure is not stable the button will be red
      */
     _unstableMeasure() {
-        this.state.class = "btn-danger";
+        this.measureState.class = "btn-danger";
     }
     /**
      * While the widget isn't querying it will be purple as a signal that we can start
      */
     _awaitingMeasure() {
-        Object.assign(this.state, this.default_ui_state);
+        Object.assign(this.measureState, this.default_ui_state);
     }
     /**
      * Set the field measure in the field
      */
     _recordMeasure() {
-        this.state.start_add = false;
-        this.state.input_val = this.amount;
+        this.measureState.start_add = false;
+        this.measureState.input_val = this.amount;
     }
     /**
-     * Convert the measured units to the units expecte by the record if different
+     * Convert the measured units to the units expected by the record. The
+     * factors of 20.0 are the quantity of the reference unit in each unit.
      * @param {Number} amount
      * @returns {Number} converted amount
      */
     _compute_quantity(amount) {
-        if (this.uom.id === this.device_uom.id) {
+        if (!this.uom || this.uom.id === this.device_uom) {
             return amount;
         }
-        let converted_amount = amount / this.remote_device_data.uom_factor;
-        converted_amount *= this.uom.factor;
-        return converted_amount;
+        return (amount * this.remote_device_data.uom_factor) / this.uom.factor;
     }
     /**
      * Set value
@@ -243,18 +250,19 @@ export class RemoteMeasureField extends FloatField {
             return;
         }
         this.amount = this._compute_quantity(this.amount);
-        if (this.state.start_add) {
-            this.amount += this.state.input_val;
+        if (this.measureState.start_add) {
+            this.amount += this.measureState.input_val;
         }
         this.props.record.update({[this.props.name]: this.amount + this.extraMeasures});
     }
+    /**
+     * Show that a measure was received
+     */
     nextStateIcon() {
-        this.state.icon = nextState[this.state.icon];
+        this.measureState.tick = !this.measureState.tick;
     }
 
     // Connection methods
-    // TODO: It'd be nice to extract al this logic to services although right now
-    // is quite intricate with te UI logic, so some refactor would be needed.
 
     /**
      * F501 Protocol response:
@@ -276,7 +284,6 @@ export class RemoteMeasureField extends FloatField {
 
     /**
      * Implemented for a continous remote stream
-     * TODO: Abstract more the possible device scenarios
      */
     async _connect_to_websockets() {
         try {
@@ -356,7 +363,7 @@ export class RemoteMeasureField extends FloatField {
             attemps_left--
         ) {
             // Allow to break the loop manually
-            if (this.state.stop) {
+            if (this.measureState.stop) {
                 break;
             }
             const processed_data = await this._read_from_device_tcp();

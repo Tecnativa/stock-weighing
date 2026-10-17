@@ -21,14 +21,15 @@ class RemoteDeviceTcpConnection(Controller):
                     device.sendall(data)
                 # Get in one shot. The info won't be longer than a few bytes
                 response = device.recv(64)
-            except Exception as e:
-                raise (e)
             finally:
                 device.close()
         return response
 
     @route(
-        "/remote_measure_device/<int:device>", type="json", auth="user", sitemap=False
+        "/remote_measure_device/<int:device>",
+        type="jsonrpc",
+        auth="user",
+        sitemap=False,
     )
     def request_weight(self, device=None, command=None, **kw):
         """Meant be called from the remote scale widget js code"""
@@ -41,4 +42,5 @@ class RemoteDeviceTcpConnection(Controller):
             response = self._get_weight(command, host, int(port))
         except TimeoutError:
             response = b"timeout"
-        return response
+        # The device answers ASCII; JSON needs text
+        return response.decode("latin-1") if response else response
