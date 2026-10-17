@@ -374,7 +374,7 @@ ul.auto-toc {
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! source digest: sha256:cf07d818e91e5094315eb5dd7db7e27e727c37feaa577ab5359e04f239a533f3
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
-<p><a class="reference external image-reference" href="https://odoo-community.org/page/development-status"><img alt="Beta" src="https://img.shields.io/badge/maturity-Beta-yellow.png" /></a> <a class="reference external image-reference" href="http://www.gnu.org/licenses/agpl-3.0-standalone.html"><img alt="License: AGPL-3" src="https://img.shields.io/badge/license-AGPL--3-blue.png" /></a> <a class="reference external image-reference" href="https://github.com/OCA/stock-weighing/tree/18.0/stock_weighing"><img alt="OCA/stock-weighing" src="https://img.shields.io/badge/github-OCA%2Fstock--weighing-lightgray.png?logo=github" /></a> <a class="reference external image-reference" href="https://translation.odoo-community.org/projects/stock-weighing-18-0/stock-weighing-18-0-stock_weighing"><img alt="Translate me on Weblate" src="https://img.shields.io/badge/weblate-Translate%20me-F47D42.png" /></a> <a class="reference external image-reference" href="https://runboat.odoo-community.org/builds?repo=OCA/stock-weighing&amp;target_branch=18.0"><img alt="Try me on Runboat" src="https://img.shields.io/badge/runboat-Try%20me-875A7B.png" /></a></p>
+<p><a class="reference external image-reference" href="https://odoo-community.org/page/development-status"><img alt="Beta" src="https://img.shields.io/badge/maturity-Beta-yellow.png" /></a> <a class="reference external image-reference" href="http://www.gnu.org/licenses/agpl-3.0-standalone.html"><img alt="License: AGPL-3" src="https://img.shields.io/badge/license-AGPL--3-blue.png" /></a> <a class="reference external image-reference" href="https://github.com/OCA/stock-weighing/tree/20.0/stock_weighing"><img alt="OCA/stock-weighing" src="https://img.shields.io/badge/github-OCA%2Fstock--weighing-lightgray.png?logo=github" /></a> <a class="reference external image-reference" href="https://translation.odoo-community.org/projects/stock-weighing-20-0/stock-weighing-20-0-stock_weighing"><img alt="Translate me on Weblate" src="https://img.shields.io/badge/weblate-Translate%20me-F47D42.png" /></a> <a class="reference external image-reference" href="https://runboat.odoo-community.org/builds?repo=OCA/stock-weighing&amp;target_branch=20.0"><img alt="Try me on Runboat" src="https://img.shields.io/badge/runboat-Try%20me-875A7B.png" /></a></p>
 <p>A shopfloor assistant for weighing on stock operations.</p>
 <p><strong>Table of contents</strong></p>
 <div class="contents local topic" id="contents">
@@ -412,22 +412,21 @@ weighing assistant.</p>
 <li>Go to <em>Configuration &gt; Operations Types</em> and choose the one you want
 to configure.</li>
 <li>Set <em>Weighing operations</em> on.</li>
-<li>You can choose your desired <em>Weighing lable report</em>.</li>
+<li>You can choose your desired <em>Weighing label report</em>.</li>
 <li>If you want to print your labels automatically, set <em>Print weighing
 label</em> on.</li>
 </ol>
-<p>If you don’t have any product with units of measure of the weight
-category, you’ll have to add some.</p>
+<p>If you don’t have any product with a unit of weight, you’ll have to add
+some.</p>
 <ul class="simple">
 <li>Allow to show the units of measure in your config settings if isn’t
 ready yet.</li>
-<li>Add some products with a unit of measure of the weight category
-(kilograms, grams, etc.).</li>
+<li>Add some products with a unit of weight (kilograms, grams, etc.).</li>
 <li>Place some pending operations for those products.</li>
 </ul>
 <p>If you want to use the weighing system for other operations you can set
 the configuration parameter <tt class="docutils literal">stock_weighing.any_operation_actions</tt> to
-a true value. You’ll be a able to record other values.</p>
+a true value. You’ll be able to record other values.</p>
 </div>
 <div class="section" id="usage">
 <h2><a class="toc-backref" href="#toc-entry-3">Usage</a></h2>
@@ -463,6 +462,9 @@ able to weigh every detailed operation.</li>
 <li>If you just want to weigh one, you can force the operation as done
 using the checkmark button.</li>
 </ul>
+<p>With a barcode scanner, reading a product (or its lot, packaging, GS1 or
+weight barcode) opens the weighing of its operation among the ones
+shown, on its lot when it is read.</p>
 <p>You can reset your weighing using the cross button. You can print the
 label on demand using the printer button. You can add a new detailed
 operation using the plus button.</p>
@@ -470,7 +472,10 @@ operation using the plus button.</p>
 <div class="section" id="validating-the-operations">
 <h3><a class="toc-backref" href="#toc-entry-5">Validating the operations</a></h3>
 <p>Each recorded weight is the picked quantity of its detailed operation,
-which is flagged as picked. When the transfer is validated:</p>
+which is flagged as picked. Weighing less than reserved keeps the rest
+reserved on another detailed operation, so the stock stays reserved for
+the transfer, and weighing more reserves the difference. When the
+transfer is validated:</p>
 <ul class="simple">
 <li>If nothing has been weighed or picked, the reserved quantities are
 validated as usual.</li>
@@ -481,11 +486,12 @@ backorder policy of the operation type.</li>
 reserved to done</em> button.</li>
 <li>The detailed operations without weight of a weighed operation are left
 out.</li>
-<li>Resetting a weight unpicks its detailed operation.</li>
+<li>Resetting a weight unpicks its detailed operation and gives its
+quantity back to the reservation.</li>
 </ul>
-<p>The picked quantities come from the <em>Stock Move Line Qty Picked</em> module,
-so they are shared with other modules preparing operations, such as the
-barcode reader.</p>
+<p>The weights are recorded through the <em>Stock Capture</em> engine, shared with
+the other screens that read or weigh quantities, such as the barcode
+reader.</p>
 </div>
 </div>
 <div class="section" id="known-issues-roadmap">
@@ -501,7 +507,7 @@ we should reimplement the whole core method in our override.</li>
 <p>Bugs are tracked on <a class="reference external" href="https://github.com/OCA/stock-weighing/issues">GitHub Issues</a>.
 In case of trouble, please check there if your issue has already been reported.
 If you spotted it first, help us to smash it by providing a detailed and welcomed
-<a class="reference external" href="https://github.com/OCA/stock-weighing/issues/new?body=module:%20stock_weighing%0Aversion:%2018.0%0A%0A**Steps%20to%20reproduce**%0A-%20...%0A%0A**Current%20behavior**%0A%0A**Expected%20behavior**">feedback</a>.</p>
+<a class="reference external" href="https://github.com/OCA/stock-weighing/issues/new?body=module:%20stock_weighing%0Aversion:%2020.0%0A%0A**Steps%20to%20reproduce**%0A-%20...%0A%0A**Current%20behavior**%0A%0A**Expected%20behavior**">feedback</a>.</p>
 <p>Do not contact contributors directly about support or help with technical issues.</p>
 </div>
 <div class="section" id="credits">
@@ -533,8 +539,8 @@ If you spotted it first, help us to smash it by providing a detailed and welcome
 mission is to support the collaborative development of Odoo features and
 promote its widespread use.</p>
 <p>Current <a class="reference external" href="https://odoo-community.org/page/maintainer-role">maintainers</a>:</p>
-<p><a class="reference external image-reference" href="https://github.com/chienandalu"><img alt="chienandalu" src="https://github.com/chienandalu.png?size=40px" /></a> <a class="reference external image-reference" href="https://github.com/sergio-teruel"><img alt="sergio-teruel" src="https://github.com/sergio-teruel.png?size=40px" /></a></p>
-<p>This module is part of the <a class="reference external" href="https://github.com/OCA/stock-weighing/tree/18.0/stock_weighing">OCA/stock-weighing</a> project on GitHub.</p>
+<p><a class="reference external image-reference" href="https://github.com/chienandalu"><img alt="chienandalu" src="https://github.com/chienandalu.png?size=40px" /></a> <a class="reference external image-reference" href="https://github.com/sergio-teruel"><img alt="sergio-teruel" src="https://github.com/sergio-teruel.png?size=40px" /></a> <a class="reference external image-reference" href="https://github.com/carlosdauden"><img alt="carlosdauden" src="https://github.com/carlosdauden.png?size=40px" /></a></p>
+<p>This module is part of the <a class="reference external" href="https://github.com/OCA/stock-weighing/tree/20.0/stock_weighing">OCA/stock-weighing</a> project on GitHub.</p>
 <p>You are welcome to contribute. To learn how please visit <a class="reference external" href="https://odoo-community.org/page/Contribute">https://odoo-community.org/page/Contribute</a>.</p>
 </div>
 </div>

@@ -3,17 +3,15 @@
 import ast
 
 from odoo import api, fields, models
-from odoo.exceptions import UserError
-from odoo.osv import expression
-from odoo.tools import float_compare
+from odoo.fields import Domain
 
 
 class StockMove(models.Model):
     _name = "stock.move"
-    _inherit = ["stock.move", "weighing.mixin"]
+    _inherit = ("stock.move", "weighing.mixin")
 
     recorded_weight = fields.Float(
-        compute="_compute_recorded_weight", digits="Product Unit of Measure"
+        compute="_compute_recorded_weight", digits="Product Unit"
     )
     move_lines_weighed = fields.Boolean(compute="_compute_recorded_weight")
     weighing_state = fields.Selection(
@@ -25,15 +23,6 @@ class StockMove(models.Model):
         compute="_compute_weighing_state",
         store=True,
     )
-    weighing_user_id = fields.Many2one(
-        comodel_name="res.users",
-        help="This user is weighing the record, so it's locked by him",
-    )
-    is_weighing_operation_locked = fields.Boolean(
-        compute="_compute_is_weighing_operation_locked"
-    )
-    lot_names = fields.Char(compute="_compute_lot_names")
-    origin_names = fields.Char(compute="_compute_origin_names")
     weighing_label_report_id = fields.Many2one(
         related="picking_type_id.weighing_label_report_id"
     )
@@ -52,81 +41,73 @@ class StockMove(models.Model):
         if not self.env.context.get("weight_operation_details"):
             return super()._compute_display_name()
         for move in self:
-            move.display_name = self.env._("%(name)s details", name=move.name)
+            move.display_name = self.env._(
+                "%(name)s details", name=move.product_id.display_name
+            )
 
     def _compute_self_move_ids(self):
         for move in self:
-            move.self_move_ids = self
+            move.self_move_ids = move
 
-    @api.depends("move_line_ids.recorded_weight")
+    @api.depends("move_line_ids.recorded_weight", "move_line_ids.picked")
     def _compute_recorded_weight(self):
         for move in self:
             move.recorded_weight = sum(move.move_line_ids.mapped("recorded_weight"))
-            move.move_lines_weighed = move.move_line_ids and all(
-                move.move_line_ids.mapped("recorded_weight")
+            move.move_lines_weighed = bool(move.move_line_ids) and not (
+                move._get_lines_to_weigh()
             )
 
-    @api.depends("move_line_ids.recorded_weight", "state", "product_id")
+    def _get_lines_to_weigh(self):
+        """Detailed operations still to weigh.
+
+        Weighing less than the reserved quantity of a detailed operation leaves
+        the rest reserved on an unpicked one with the same goods, which doesn't
+        need to be weighed: the weighing was done.
+        """
+        self.ensure_one()
+        weighed_lines = self.move_line_ids.filtered("has_recorded_weight")
+        return self.move_line_ids.filtered(
+            lambda ml: (
+                not ml.has_recorded_weight
+                and not (
+                    not ml.picked
+                    and any(line._capture_same_place(ml) for line in weighed_lines)
+                )
+            )
+        )
+
+    @api.depends(
+        "move_line_ids.recorded_weight",
+        "move_line_ids.picked",
+        "move_line_ids.quantity",
+        "state",
+        "product_id",
+        "product_uom_qty",
+    )
     def _compute_weighing_state(self):
         """Only products with weight will trigger this state"""
         self.weighing_state = False
         for move in self.filtered("has_weight"):
             move_to_do = move.state not in {"draft", "cancel", "done"}
-            if (
+            weighed = any(move.move_line_ids.mapped("has_recorded_weight"))
+            if weighed and (
                 move.move_lines_weighed
-                # Force the operation weighing state if one of the detailed
-                # operations overpasses the demand
-                or float_compare(
-                    move.quantity,
-                    move.product_uom_qty,
-                    precision_rounding=move.product_uom.rounding,
-                )
+                # Force the operation weighing state if the weighed quantity
+                # overpasses the demand
+                or move.uom_id.compare(move.captured_quantity, move.product_uom_qty)
                 >= 0
-            ) and any(move.move_line_ids.mapped("has_recorded_weight")):
-                move.weighing_state = "weighed"
-            elif move.recorded_weight and not move.move_lines_weighed and move_to_do:
-                move.weighing_state = "weighing"
-            elif (
-                not move.recorded_weight
-                and not move.move_lines_weighed
-                and move_to_do
-                and not move.qty_picked
             ):
+                move.weighing_state = "weighed"
+            elif move.recorded_weight and move_to_do:
+                move.weighing_state = "weighing"
+            elif not move.recorded_weight and move_to_do and not move.picked:
                 move.weighing_state = "to_weigh"
 
-    @api.depends("move_line_ids.lot_id")
-    def _compute_lot_names(self):
-        """To use in the kanban and show the list of lots for this move"""
-        self.lot_names = False
-        for move in self:
-            move.lot_names = ",".join(move.move_line_ids.lot_id.mapped("name"))
-
-    @api.depends("move_line_ids.location_id")
-    def _compute_origin_names(self):
-        """To use in the kanban and show the origin locations on this move
-        eservation"""
-        self.origin_names = False
-        for move in self:
-            move.origin_names = ",".join(move.move_line_ids.location_id.mapped("name"))
-
-    @api.depends("weighing_user_id", "state")
-    def _compute_is_weighing_operation_locked(self):
-        """Out own operations won't show up as locked"""
-        self.is_weighing_operation_locked = False
-        self.filtered(
-            lambda x: (
-                x.state not in {"cancel", "draft", "done"}
-                and x.weighing_user_id
-                and x.weighing_user_id != self.env.user
-            )
-        ).is_weighing_operation_locked = True
-
-    @api.depends("qty_picked", "picking_type_id.weighing_label_report_id")
+    @api.depends("move_line_ids.picked", "picking_type_id.weighing_label_report_id")
     def _compute_show_weighing_print_button(self):
-        """"""
         self.show_weighing_print_button = False
         self.filtered(
-            lambda x: x.qty_picked and x.picking_type_id.weighing_label_report_id
+            lambda x: x.picked and x.picking_type_id.weighing_label_report_id
         ).show_weighing_print_button = True
 
     def _compute_weighing_state_color(self):
@@ -136,16 +117,16 @@ class StockMove(models.Model):
 
     def _has_weigh_domain(self):
         """Show variable weight types only"""
-        domain = super()._has_weigh_domain()
-        domain = expression.AND([domain, [("product_uom_qty", ">", 0)]])
-        return domain
+        return Domain.AND([super()._has_weigh_domain(), [("product_uom_qty", ">", 0)]])
 
     def _search_has_weight(self, operator, value):
         domain = super()._search_has_weight(operator, value)
-        domain = expression.AND([domain, [("product_uom_qty", ">", 0)]])
-        return domain
+        positive = (operator == "=") == value
+        if domain is NotImplemented or not positive:
+            return domain
+        return Domain.AND([domain, [("product_uom_qty", ">", 0)]])
 
-    def search_fetch(self, domain, field_names, offset=0, limit=None, order=None):
+    def search_fetch(self, domain, field_names=None, offset=0, limit=None, order=None):
         # We need to sort by move sub-fields. Don't force if we have a given order
         moves = super().search_fetch(
             domain, field_names, offset=offset, limit=limit, order=order
@@ -160,30 +141,15 @@ class StockMove(models.Model):
             )
         return moves
 
-    # TODO: This method disappeared (v17). Check the effect or if theres any equivalent
-    # def _set_quantities_to_reservation(self):
-    #     """Avoid squashing weighings values"""
-    #     weighted_records = self.filtered("move_line_ids.recorded_weight")
-    #     return super(
-    #         StockMove, self - weighted_records
-    #     )._set_quantities_to_reservation()
-
     def action_lock_weighing_operation(self):
-        """Avoid other that other user to modify the weight operation"""
+        """Avoid that other users modify the weight operation"""
         self.ensure_one()
-        if self.weighing_user_id and self.weighing_user_id != self.env.user:
-            raise UserError(
-                self.env._(
-                    "The user %(user)s is already weighing this operation",
-                    user=self.weighing_user_id.name,
-                )
-            )
-        self.weighing_user_id = self.env.user
+        self._capture_lock()
 
     def action_unlock_weigh_operation(self):
         """Unlock the weigh operation"""
         self.ensure_one()
-        self.weighing_user_id = False
+        self._capture_unlock()
 
     def _get_default_print_label(self):
         """Can be extended with other modules to add checks"""
@@ -195,10 +161,11 @@ class StockMove(models.Model):
         action = self.env["ir.actions.actions"]._for_xml_id(
             "stock_weighing.weighing_wizard_action"
         )
-        action["name"] = fields.first(self.move_line_ids)._get_action_weighing_name()
+        move_line = self.move_line_ids[:1]
+        action["name"] = move_line._get_action_weighing_name()
         action["context"] = dict(
             self.env.context,
-            default_selected_move_line_id=(fields.first(self.move_line_ids).id),
+            default_selected_move_line_id=move_line.id,
             default_weight=self.recorded_weight or self.quantity,
             default_move_line_ids=self.move_line_ids.ids,
             default_print_label=self._get_default_print_label(),
@@ -220,8 +187,8 @@ class StockMove(models.Model):
             "%(remain).2f %(uom)s remaining",
             product=self.product_id.name,
             operation=self.reference,
-            remain=max((self.product_uom_qty - self.quantity), 0),
-            uom=self.product_uom.name,
+            remain=max((self.product_uom_qty - self.captured_quantity), 0),
+            uom=self.uom_id.name,
         )
         return action
 
@@ -231,7 +198,7 @@ class StockMove(models.Model):
             "stock_weighing.weighing_operation_action"
         )
         action["display_name"] = self.env._(
-            "Detailed operations for %(name)s", name=self.name
+            "Detailed operations for %(name)s", name=self.product_id.display_name
         )
         action["domain"] = [("id", "=", self.id)]
         action["view_mode"] = "form"
@@ -260,10 +227,46 @@ class StockMove(models.Model):
         self.weighing_state = "weighed"
 
     def set_product_uom_qty_to_qty_done_from_weighing(self):
-        self.ensure_one()
-        for move_line in self.filtered(lambda line: not line.has_weight).move_line_ids:
-            move_line.qty_picked = move_line.quantity
-            move_line.recorded_weight = move_line.quantity
-            move_line.has_recorded_weight = True
-            move_line.weighing_user_id = self.env.user
-            move_line.weighing_date = fields.Datetime.now()
+        """Capture what is left of the operations without weight"""
+        moves = self.filtered(lambda move: not move.has_weight)
+        moves.action_capture_remaining()
+        for move_line in moves.move_line_ids.filtered("picked"):
+            move_line.write(
+                {"recorded_weight": move_line.quantity, "has_recorded_weight": True}
+            )
+
+    def action_weighing_scan(self, barcode):
+        """Weigh the operation of a barcode read on the weighing screen.
+
+        The barcode is interpreted as the other capture screens do, and the
+        operation of its product among these ones is opened to be weighed, on
+        the detailed operation of the lot read if there is one.
+        """
+        values = self.picking_id._capture_parse_barcode(barcode)
+        product = values.get("product_id")
+        moves = self.filtered(
+            lambda move: (
+                move.product_id == product
+                and move.state not in ("draft", "done", "cancel")
+            )
+        )
+        if not moves:
+            return {
+                "type": "ir.actions.client",
+                "tag": "display_notification",
+                "params": {
+                    "message": self.env._(
+                        "No operation to weigh for %(barcode)s", barcode=barcode
+                    ),
+                    "type": "warning",
+                },
+            }
+        move = moves[:1]
+        lot = values.get("lot_id")
+        line = move.move_line_ids.filtered(lambda ml: lot and ml.lot_id == lot)[:1]
+        if line:
+            return line.action_weighing()
+        action = move.action_weighing()
+        if lot:
+            action["context"]["default_lot_id"] = lot.id
+        return action

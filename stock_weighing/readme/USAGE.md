@@ -21,21 +21,27 @@ You'll be presented with a list of operations to weigh. To weigh them, just pres
   - If there are several, you'll enter the detailed view and you'll be able to weigh every detailed operation.
   - If you just want to weigh one, you can force the operation as done using the checkmark button.
 
+With a barcode scanner, reading a product (or its lot, packaging, GS1 or weight barcode)
+opens the weighing of its operation among the ones shown, on its lot when it is read.
+
 You can reset your weighing using the cross button.
 You can print the label on demand using the printer button.
 You can add a new detailed operation using the plus button.
 
 Validating the operations
 -------------------------
-Each recorded weight is the picked quantity of its detailed operation, which
-is flagged as picked. When the transfer is validated:
+Each recorded weight is the picked quantity of its detailed operation, which is
+flagged as picked. Weighing less than reserved keeps the rest reserved on another
+detailed operation, so the stock stays reserved for the transfer, and weighing more
+reserves the difference. When the transfer is validated:
 
   - If nothing has been weighed or picked, the reserved quantities are validated as usual.
   - Once any operation has been weighed, only the picked detailed operations are validated,
     with their weights. The rest follow the backorder policy of the operation type.
   - Operations of products that aren't weighed are picked with the *Set reserved to done* button.
   - The detailed operations without weight of a weighed operation are left out.
-  - Resetting a weight unpicks its detailed operation.
+  - Resetting a weight unpicks its detailed operation and gives its quantity back to the
+    reservation.
 
-The picked quantities come from the *Stock Move Line Qty Picked* module, so they are shared
-with other modules preparing operations, such as the barcode reader.
+The weights are recorded through the *Stock Capture* engine, shared with the other
+screens that read or weigh quantities, such as the barcode reader.

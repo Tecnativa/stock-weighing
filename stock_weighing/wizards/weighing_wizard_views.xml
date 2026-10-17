@@ -3,7 +3,6 @@
     <record id="weighing_wizard_form_view" model="ir.ui.view">
         <field name="model">weighing.wizard</field>
         <field name="arch" type="xml">
-            <!-- <form create="false" string="Record Weight" js_class="weight_recording_form"> -->
             <form create="false" string="Record Weight">
                 <field name="selected_move_line_id" invisible="1" />
                 <field name="move_id" invisible="1" />
@@ -12,12 +11,14 @@
                 <field name="available_result_package_ids" invisible="1" />
                 <field name="has_weight" invisible="1" />
                 <sheet>
-                    <group>
+                    <div
+                        class="d-flex align-items-center gap-2 mb-3"
+                        invisible="not show_quant or wizard_state == 'weight'"
+                    >
                         <field
                             name="quant_id"
-                            class="form-control-lg ps-0"
+                            class="form-control-lg ps-0 flex-grow-1"
                             placeholder="Select source stock..."
-                            invisible="not show_quant or wizard_state == 'weight'"
                             domain="[('product_id', '=', product_id), ('location_id', 'child_of', location_id)]"
                             context="{
                                 'default_product_id': product_id,
@@ -29,7 +30,16 @@
                             options="{'no_create': True, 'no_open': True}"
                             nolabel="1"
                         />
-                    </group>
+                        <button
+                            name="action_clear_quant"
+                            type="object"
+                            class="btn btn-primary o_weighing_clear_quant_btn"
+                            icon="delete"
+                            title="Clear source stock"
+                            aria-label="Clear source stock"
+                            invisible="not quant_id"
+                        />
+                    </div>
                     <group
                         groups="stock.group_production_lot"
                         col="1"
@@ -39,7 +49,7 @@
                             name="lot_id"
                             class="form-control-lg pl-0"
                             placeholder="Select lot..."
-                            invisible="wizard_state == 'weight' or product_tracking == 'none'"
+                            invisible="wizard_state == 'weight' or not product_tracking"
                             options="{'no_create': True}"
                             nolabel="1"
                         />
@@ -52,7 +62,7 @@
                         class="w-100 text-center text-info o_input_weight"
                         options="{'auto_select': True, 'min': 0}"
                     />
-                    <group groups="stock.group_production_lot">
+                    <group groups="stock.group_tracking_lot">
                         <field
                             name="result_package_id"
                             class="form-control-lg ps-0"

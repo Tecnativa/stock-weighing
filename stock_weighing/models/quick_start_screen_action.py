@@ -1,7 +1,8 @@
 # Copyright 2025 Tecnativa - Carlos Roca
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl.html).
 from odoo import models
-from odoo.osv import expression
+from odoo.fields import Domain
+from odoo.tools.safe_eval import safe_eval
 
 
 class QuickStartScreenAction(models.Model):
@@ -18,12 +19,16 @@ class QuickStartScreenAction(models.Model):
             any_operation_actions = (
                 self.env["ir.config_parameter"]
                 .sudo()
-                .get_param("stock_weighing.any_operation_actions")
+                .get_bool("stock_weighing.any_operation_actions")
             )
             if not any_operation_actions:
-                res["domain"] = expression.AND(
-                    [res["domain"], [("has_weight", "=", True)]]
-                )
-                res["context"].pop("show_weight_detail_buttons", None)
-                res["context"] = dict(search_default_to_weigh=1, **res["context"])
+                domain = res.get("domain") or []
+                if isinstance(domain, str):
+                    domain = safe_eval(domain)
+                res["domain"] = list(Domain.AND([domain, [("has_weight", "=", True)]]))
+                context = res.get("context") or {}
+                if isinstance(context, str):
+                    context = safe_eval(context)
+                context.pop("show_weight_detail_buttons", None)
+                res["context"] = dict(search_default_to_weigh=1, **context)
         return res

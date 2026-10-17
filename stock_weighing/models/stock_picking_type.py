@@ -2,8 +2,8 @@
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl.html).
 import ast
 
-from odoo import _, api, fields, models
-from odoo.osv import expression
+from odoo import api, fields, models
+from odoo.fields import Domain
 
 
 class StockPickingType(models.Model):
@@ -29,14 +29,14 @@ class StockPickingType(models.Model):
         any_operation_actions = (
             self.env["ir.config_parameter"]
             .sudo()
-            .get_param("stock_weighing.any_operation_actions")
+            .get_bool("stock_weighing.any_operation_actions")
         )
         domain = [("state", "in", ("assigned", "confirmed", "waiting"))]
         if not any_operation_actions:
-            domain = expression.AND([domain, [("has_weight", "=", True)]])
+            domain = Domain.AND([domain, [("has_weight", "=", True)]])
         for picking_type in self:
             picking_type.weight_move_ids = self.env["stock.move"].search(
-                expression.AND([[("picking_type_id", "=", picking_type.id)], domain])
+                Domain.AND([[("picking_type_id", "=", picking_type.id)], domain])
             )
 
     @api.depends("weight_move_ids")
@@ -49,7 +49,7 @@ class StockPickingType(models.Model):
         action = self.env["ir.actions.actions"]._for_xml_id(
             "stock_weighing.weighing_operation_action"
         )
-        action["name"] = _("%(name)s Weighing operations", name=self.name)
+        action["name"] = self.env._("%(name)s Weighing operations", name=self.name)
         action["domain"] = [("id", "in", self.weight_move_ids.ids)]
         action["context"] = dict(
             self.env.context,

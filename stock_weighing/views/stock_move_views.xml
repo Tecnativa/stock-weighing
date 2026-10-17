@@ -28,8 +28,8 @@
                 <field name="recorded_weight" />
                 <field name="is_inventory" />
                 <field name="state" />
-                <field name="name" />
-                <field name="product_uom" />
+                <field name="uom_id" />
+                <field name="captured_quantity" />
                 <field name="location_id" />
                 <field name="location_dest_id" />
                 <field name="has_weight" />
@@ -38,11 +38,11 @@
                 <field name="move_lines_count" />
                 <field name="move_lines_weighed" />
                 <field name="weighing_state" />
-                <field name="weighing_user_id" />
-                <field name="is_weighing_operation_locked" />
+                <field name="capture_user_id" />
+                <field name="is_capture_locked" />
                 <field name="show_weighing_print_button" />
                 <field name="partner_id" />
-                <field name="origin_names" />
+                <field name="capture_location_names" />
                 <field name="weighing_label_report_id" />
                 <field name="date" />
                 <progressbar
@@ -56,36 +56,38 @@
                             t-value="record.move_lines_count.raw_value === 1"
                         />
                         <div
-                            t-attf-class="o_weight_kanban_card {{record.is_weighing_operation_locked.raw_value and 'bg-light' or ''}}"
+                            t-attf-class="o_weight_kanban_card {{record.is_capture_locked.raw_value and 'bg-light' or ''}}"
                         >
                             <div class="o_kanban_detail_ungrouped row">
                                 <!-- Header infos -->
                                 <div class="col-12">
                                     <div name="weight_card_header" class="mb-2">
-                                        <t t-if="record.lot_names.raw_value">
+                                        <t t-if="record.capture_lot_names.raw_value">
                                             <small>LOTS: </small>
                                             <span class="text-muted me-1">
-                                                <field name="lot_names" />
+                                                <field name="capture_lot_names" />
                                             </span>
                                         </t>
                                         <span
                                             class="badge bg-light me-1"
                                             title="Destination"
                                         >
-                                            <t t-out="record.origin_names.value" />
-                                            <i class="fa fa-arrow-right" />
+                                            <t
+                                                t-out="record.capture_location_names.value"
+                                            />
+                                            <i class="oi" data-icon="arrow_forward" />
                                             <t t-out="record.location_dest_id.value" />
                                         </span>
                                         <span class="pull-right badge bg-light">
                                             <field name="date" />
                                         </span>
                                         <span
-                                            t-if="record.is_weighing_operation_locked.raw_value"
+                                            t-if="record.is_capture_locked.raw_value"
                                             class="badge bg-danger pull-right"
                                             title="Locked by user"
                                         >
-                                            <i class="fa fa-lock" />
-                                            <field name="weighing_user_id" />
+                                            <i class="oi" data-icon="lock" />
+                                            <field name="capture_user_id" />
                                         </span>
                                     </div>
                                 </div>
@@ -105,17 +107,17 @@
                                         <span class="text-warning">
                                             <strong>To do: </strong>
                                             <field name="product_uom_qty" />
-                                            <field name="product_uom" />
+                                            <field name="uom_id" />
                                         </span>
                                         <span class="text-info ms-2">
                                             <strong>Reserved: </strong>
                                             <field name="quantity" />
-                                            <field name="product_uom" />
+                                            <field name="uom_id" />
                                         </span>
                                         <span class="ms-2 text-success">
                                             <strong>Done: </strong>
-                                            <field name="qty_picked" />
-                                            <field name="product_uom" />
+                                            <field name="captured_quantity" />
+                                            <field name="uom_id" />
                                         </span>
                                     </div>
                                 </div>
@@ -133,7 +135,9 @@
                                             type="object"
                                         >
                                             <i
-                                                t-attf-class="fa {{record.recorded_weight.raw_value ? 'fa-refresh text-success' : 'fa-circle text-danger'}}"
+                                                class="oi"
+                                                t-attf-class="{{record.recorded_weight.raw_value ? 'text-success' : 'oi-filled text-danger'}}"
+                                                t-att-data-icon="record.recorded_weight.raw_value ? 'refresh' : 'circle'"
                                             />
                                         </button>
                                         <!-- We can't do a t-attf-name -->
@@ -145,7 +149,9 @@
                                             type="object"
                                         >
                                             <i
-                                                t-attf-class="fa {{record.recorded_weight.raw_value &amp;&amp; record.weighing_state.raw_value == 'weighed' ? 'fa-refresh text-success' : 'fa-circle text-danger'}}"
+                                                class="oi"
+                                                t-attf-class="{{record.recorded_weight.raw_value &amp;&amp; record.weighing_state.raw_value == 'weighed' ? 'text-success' : 'oi-filled text-danger'}}"
+                                                t-att-data-icon="record.recorded_weight.raw_value &amp;&amp; record.weighing_state.raw_value == 'weighed' ? 'refresh' : 'circle'"
                                             />
                                         </button>
                                         <button
@@ -156,17 +162,23 @@
                                             name="action_force_weighed"
                                             type="object"
                                         >
-                                            <i class="fa fa-check text-success" />
+                                            <i
+                                                class="oi text-success"
+                                                data-icon="check"
+                                            />
                                         </button>
                                         <button
-                                            t-if="!record.has_weight.raw_value and record.quantity.raw_value !== record.qty_picked.raw_value"
+                                            t-if="!record.has_weight.raw_value and record.quantity.raw_value !== record.captured_quantity.raw_value"
                                             class="btn btn-lg border"
                                             string="Set reserved to done"
                                             title="Set reserved to done"
                                             name="set_product_uom_qty_to_qty_done_from_weighing"
                                             type="object"
                                         >
-                                            <i class="fa fa-arrow-right text-success" />
+                                            <i
+                                                class="oi text-success"
+                                                data-icon="arrow_forward"
+                                            />
                                         </button>
                                     </div>
                                 </div>
@@ -189,12 +201,12 @@
                                         t-attf-class="badge bg-{{record.recorded_weight.raw_value ? 'success' : 'light'}} w-100"
                                     >Qty. done</span>
                                     <div class="text-center">
-                                        <t t-if="record.qty_picked.raw_value">
+                                        <t t-if="record.captured_quantity.raw_value">
                                             <span class="h1 text-success">
-                                                <field name="qty_picked" />
+                                                <field name="captured_quantity" />
                                             </span>
                                             <sup class="initialism">
-                                                <field name="product_uom" />
+                                                <field name="uom_id" />
                                             </sup>
                                         </t>
                                         <t t-else="">
@@ -216,7 +228,7 @@
                                             name="action_add_move_line"
                                             title="Add operation"
                                         >
-                                            <i class="fa fa-plus" />
+                                            <i class="oi" data-icon="add" />
                                         </button>
                                         <button
                                             t-if="!['done', 'cancel', 'draft'].includes(record.state.raw_value)"
@@ -226,16 +238,16 @@
                                             title="Reset weights"
                                             confirm="This will reset your current weight. Proceed?"
                                         >
-                                            <i class="fa fa-times" />
+                                            <i class="oi" data-icon="close" />
                                         </button>
                                         <button
-                                            t-if="record.is_weighing_operation_locked.raw_value"
+                                            t-if="record.is_capture_locked.raw_value"
                                             class="ms-1 btn-danger btn btn-lg"
                                             type="object"
                                             name="action_unlock_weigh_operation"
                                             title="Unlock weight operation"
                                         >
-                                            <i class="fa fa-lock" />
+                                            <i class="oi" data-icon="lock" />
                                         </button>
                                         <button
                                             t-if="record.show_weighing_print_button.raw_value"
@@ -246,7 +258,7 @@
                                             title="Print labels"
                                             context="{'launch_manual_print': True}"
                                         >
-                                            <i class="fa fa-print" />
+                                            <i class="oi" data-icon="print" />
                                         </button>
                                     </div>
                                 </div>
@@ -261,7 +273,8 @@
                                             title="Details"
                                         >
                                             <i
-                                                t-attf-class="fa fa-th-list"
+                                                class="oi"
+                                                data-icon="view_list"
                                                 title="Details"
                                             />
                                         </button>
@@ -320,13 +333,13 @@
             <filter name="ready" position="attributes">
                 <attribute
                     name="context"
-                >{'shown_in_panel': {'icon': 'fa-thumbs-up'}}</attribute>
+                >{'shown_in_panel': {'icon': 'thumb_up'}}</attribute>
                 <attribute name="domain">[('state','=','assigned')]</attribute>
             </filter>
             <filter name="future" position="attributes">
                 <attribute
                     name="context"
-                >{'shown_in_panel': {'icon': 'fa-hand-o-right'}}</attribute>
+                >{'shown_in_panel': {'icon': 'arrow_forward'}}</attribute>
             </filter>
             <filter name="done" position="after">
                 <separator />
@@ -334,7 +347,7 @@
                     string="To weigh"
                     name="to_weigh"
                     domain="[('weighing_state', 'in', ['weighing', 'to_weigh'])]"
-                    context="{'shown_in_panel': {'icon': 'fa-thermometer'}}"
+                    context="{'shown_in_panel': {'icon': 'device_thermostat'}}"
                 />
             </filter>
             <filter name="today" position="before">
@@ -342,7 +355,7 @@
                     string="Today"
                     name="date_today"
                     domain="[('date', '&lt;=', context_today().strftime('%%Y-%%m-%%d 23:59:59'))]"
-                    context="{'shown_in_panel': {'icon': 'fa-calendar'}}"
+                    context="{'shown_in_panel': {'icon': 'calendar_today'}}"
                 />
             </filter>
 

@@ -13,7 +13,7 @@
             ("picking_type_id.weighing_operations", "=", True),
         ]</field>
         <field name="context">{'show_weight_detail_buttons': True}</field>
-        <field name="icon_name">fa-arrow-down</field>
+        <field name="icon_name">arrow_downward</field>
         <field name="color" eval="7" />
     </record>
     <record
@@ -29,7 +29,7 @@
             ("picking_type_id.weighing_operations", "=", True),
         ]</field>
         <field name="context">{'show_weight_detail_buttons': True}</field>
-        <field name="icon_name">fa-arrow-right</field>
+        <field name="icon_name">arrow_forward</field>
         <field name="color" eval="7" />
     </record>
     <record
@@ -45,7 +45,7 @@
             ("picking_type_id.weighing_operations", "=", True),
         ]</field>
         <field name="context">{'show_weight_detail_buttons': True}</field>
-        <field name="icon_name">fa-arrows-h</field>
+        <field name="icon_name">swap_horiz</field>
         <field name="color" eval="7" />
     </record>
     <record id="quick_start_screen_weighing" model="quick.start.screen">

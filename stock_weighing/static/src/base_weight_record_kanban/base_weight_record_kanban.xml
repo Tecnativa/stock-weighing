@@ -5,44 +5,49 @@
         t-inherit="web.KanbanHeader"
         t-inherit-mode="primary"
     >
-        <xpath expr="//t[@t-esc='groupName']" position="before">
+        <xpath
+            expr="//div[@t-if='this.group.isFolded']/t[@t-out='this.odoomark(this.group.displayName)']"
+            position="before"
+        >
             <span class="me-2">
                 <i
-                    class="fa fa-folder text-warning"
-                    role="button"
-                    aria-label="Fold"
-                    title="Fold"
-                    t-on-click.stop="toggleGroup"
-                />
-            </span>
-        </xpath>
-        <xpath expr="//span[@t-esc='groupName']" position="before">
-            <span class="me-2">
-                <i
-                    class="fa fa-folder-open text-warning"
+                    class="oi oi-filled text-warning"
+                    data-icon="folder"
                     role="button"
                     aria-label="Unfold"
                     title="Unfold"
-                    t-on-click.stop.prevent="toggleGroup"
+                    t-on-click.stop="() => this.onToggleGroup()"
+                />
+            </span>
+        </xpath>
+        <xpath expr="//span[hasclass('text-truncate')]" position="before">
+            <span class="me-2">
+                <i
+                    class="oi oi-filled text-warning"
+                    data-icon="folder_open"
+                    role="button"
+                    aria-label="Fold"
+                    title="Fold"
+                    t-on-click.stop.prevent="() => this.onToggleGroup()"
                 />
             </span>
             <button
-                t-if="show_weighing_print_button"
+                t-if="this.showWeighingPrintButton"
                 class="btn btn-secondary me-2"
                 title="Print labels"
-                t-on-click.prevent="onPrintLabels"
+                t-on-click.prevent="() => this.onPrintLabels()"
             >
-                <i class="fa fa-print" role="image" />
+                <i class="oi" data-icon="print" role="img" />
             </button>
         </xpath>
-        <xpath expr="//span[@t-esc='groupName']" position="after">
+        <xpath expr="//span[hasclass('text-truncate')]" position="after">
             <button
-                t-if="!group.isFolded and group.groupByField.relation"
+                t-if="!this.group.isFolded and this.group.groupByField.relation"
                 class="btn btn-link"
                 title="Open record"
-                t-on-click.prevent="onOpenColumn"
+                t-on-click.prevent="() => this.onOpenColumn()"
             >
-                <i class="fa fa-external-link" role="image" />
+                <i class="oi" data-icon="open_in_new" role="img" />
             </button>
         </xpath>
     </t>

@@ -11,6 +11,7 @@
                 <field name="location_dest_id" invisible="1" />
                 <field name="has_weight" />
                 <field name="has_recorded_weight" />
+                <field name="picked" />
                 <field name="recorded_weight" />
                 <field name="state" />
                 <field name="reference" />
@@ -23,7 +24,11 @@
                                     <div>
                                         <span class="badge bg-light">
                                             <field name="location_id" />
-                                            <i class="fa fa-arrow-right" title="to" />
+                                            <i
+                                                class="oi"
+                                                data-icon="arrow_forward"
+                                                title="to"
+                                            />
                                             <field name="location_dest_id" />
                                         </span>
                                     </div>
@@ -35,7 +40,7 @@
                                         <br />
                                         <strong class="h5 text-warning">
                                             <field name="quantity" />
-                                            <field name="product_uom_id" />
+                                            <field name="uom_id" />
                                         </strong>
                                     </div>
                                 </div>
@@ -73,7 +78,9 @@
                                             class="btn btn-lg border"
                                         >
                                             <i
-                                                t-attf-class="fa {{record.recorded_weight.raw_value ? 'fa-refresh text-success' : 'fa-circle text-danger'}}"
+                                                class="oi"
+                                                t-attf-class="{{record.recorded_weight.raw_value ? 'text-success' : 'oi-filled text-danger'}}"
+                                                t-att-data-icon="record.recorded_weight.raw_value ? 'refresh' : 'circle'"
                                             />
                                         </button>
                                     </div>
@@ -81,12 +88,12 @@
                                 <!-- Weight value -->
                                 <div class="col-3">
                                     <div>
-                                        <t t-if="record.qty_picked.raw_value">
+                                        <t t-if="record.picked.raw_value">
                                             <span class="h1 text-success">
-                                                <field name="qty_picked" />
+                                                <field name="quantity" />
                                             </span>
                                             <sup class="initialism">
-                                                <field name="product_uom_id" />
+                                                <field name="uom_id" />
                                             </sup>
                                         </t>
                                         <t t-else="">
@@ -107,7 +114,7 @@
                                             title="Reset weights"
                                             confirm="This will reset your current weight. Proceed?"
                                         >
-                                            <i class="fa fa-times" />
+                                            <i class="oi" data-icon="close" />
                                         </button>
                                         <button
                                             class="btn btn-lg btn-secondary ms-2"
@@ -117,7 +124,11 @@
                                             title="Print labels"
                                             context="{'launch_manual_print': True}"
                                         >
-                                            <i class="fa fa-print" role="image" />
+                                            <i
+                                                class="oi"
+                                                data-icon="print"
+                                                role="img"
+                                            />
                                         </button>
                                     </div>
                                 </div>
@@ -126,15 +137,6 @@
                     </t>
                 </templates>
             </kanban>
-        </field>
-    </record>
-    <record id="view_move_line_tree_detailed" model="ir.ui.view">
-        <field name="model">stock.move.line</field>
-        <field name="inherit_id" ref="stock.view_move_line_tree_detailed" />
-        <field name="arch" type="xml">
-            <field name="quantity" position="before">
-                <field name="qty_picked" optional="hide" />
-            </field>
         </field>
     </record>
 </odoo>

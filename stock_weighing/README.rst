@@ -21,13 +21,13 @@ Weighing assistant
     :target: http://www.gnu.org/licenses/agpl-3.0-standalone.html
     :alt: License: AGPL-3
 .. |badge3| image:: https://img.shields.io/badge/github-OCA%2Fstock--weighing-lightgray.png?logo=github
-    :target: https://github.com/OCA/stock-weighing/tree/18.0/stock_weighing
+    :target: https://github.com/OCA/stock-weighing/tree/20.0/stock_weighing
     :alt: OCA/stock-weighing
 .. |badge4| image:: https://img.shields.io/badge/weblate-Translate%20me-F47D42.png
-    :target: https://translation.odoo-community.org/projects/stock-weighing-18-0/stock-weighing-18-0-stock_weighing
+    :target: https://translation.odoo-community.org/projects/stock-weighing-20-0/stock-weighing-20-0-stock_weighing
     :alt: Translate me on Weblate
 .. |badge5| image:: https://img.shields.io/badge/runboat-Try%20me-875A7B.png
-    :target: https://runboat.odoo-community.org/builds?repo=OCA/stock-weighing&target_branch=18.0
+    :target: https://runboat.odoo-community.org/builds?repo=OCA/stock-weighing&target_branch=20.0
     :alt: Try me on Runboat
 
 |badge1| |badge2| |badge3| |badge4| |badge5|
@@ -58,22 +58,21 @@ To do so:
 1. Go to *Configuration > Operations Types* and choose the one you want
    to configure.
 2. Set *Weighing operations* on.
-3. You can choose your desired *Weighing lable report*.
+3. You can choose your desired *Weighing label report*.
 4. If you want to print your labels automatically, set *Print weighing
    label* on.
 
-If you don't have any product with units of measure of the weight
-category, you'll have to add some.
+If you don't have any product with a unit of weight, you'll have to add
+some.
 
 - Allow to show the units of measure in your config settings if isn't
   ready yet.
-- Add some products with a unit of measure of the weight category
-  (kilograms, grams, etc.).
+- Add some products with a unit of weight (kilograms, grams, etc.).
 - Place some pending operations for those products.
 
 If you want to use the weighing system for other operations you can set
 the configuration parameter ``stock_weighing.any_operation_actions`` to
-a true value. You'll be a able to record other values.
+a true value. You'll be able to record other values.
 
 Usage
 =====
@@ -112,6 +111,10 @@ just press the red circle button to record a new weight:
 - If you just want to weigh one, you can force the operation as done
   using the checkmark button.
 
+With a barcode scanner, reading a product (or its lot, packaging, GS1 or
+weight barcode) opens the weighing of its operation among the ones
+shown, on its lot when it is read.
+
 You can reset your weighing using the cross button. You can print the
 label on demand using the printer button. You can add a new detailed
 operation using the plus button.
@@ -120,7 +123,10 @@ Validating the operations
 -------------------------
 
 Each recorded weight is the picked quantity of its detailed operation,
-which is flagged as picked. When the transfer is validated:
+which is flagged as picked. Weighing less than reserved keeps the rest
+reserved on another detailed operation, so the stock stays reserved for
+the transfer, and weighing more reserves the difference. When the
+transfer is validated:
 
 - If nothing has been weighed or picked, the reserved quantities are
   validated as usual.
@@ -131,11 +137,12 @@ which is flagged as picked. When the transfer is validated:
   reserved to done* button.
 - The detailed operations without weight of a weighed operation are left
   out.
-- Resetting a weight unpicks its detailed operation.
+- Resetting a weight unpicks its detailed operation and gives its
+  quantity back to the reservation.
 
-The picked quantities come from the *Stock Move Line Qty Picked* module,
-so they are shared with other modules preparing operations, such as the
-barcode reader.
+The weights are recorded through the *Stock Capture* engine, shared with
+the other screens that read or weigh quantities, such as the barcode
+reader.
 
 Known issues / Roadmap
 ======================
@@ -150,7 +157,7 @@ Bug Tracker
 Bugs are tracked on `GitHub Issues <https://github.com/OCA/stock-weighing/issues>`_.
 In case of trouble, please check there if your issue has already been reported.
 If you spotted it first, help us to smash it by providing a detailed and welcomed
-`feedback <https://github.com/OCA/stock-weighing/issues/new?body=module:%20stock_weighing%0Aversion:%2018.0%0A%0A**Steps%20to%20reproduce**%0A-%20...%0A%0A**Current%20behavior**%0A%0A**Expected%20behavior**>`_.
+`feedback <https://github.com/OCA/stock-weighing/issues/new?body=module:%20stock_weighing%0Aversion:%2020.0%0A%0A**Steps%20to%20reproduce**%0A-%20...%0A%0A**Current%20behavior**%0A%0A**Expected%20behavior**>`_.
 
 Do not contact contributors directly about support or help with technical issues.
 
@@ -190,11 +197,14 @@ promote its widespread use.
 .. |maintainer-sergio-teruel| image:: https://github.com/sergio-teruel.png?size=40px
     :target: https://github.com/sergio-teruel
     :alt: sergio-teruel
+.. |maintainer-carlosdauden| image:: https://github.com/carlosdauden.png?size=40px
+    :target: https://github.com/carlosdauden
+    :alt: carlosdauden
 
 Current `maintainers <https://odoo-community.org/page/maintainer-role>`__:
 
-|maintainer-chienandalu| |maintainer-sergio-teruel| 
+|maintainer-chienandalu| |maintainer-sergio-teruel| |maintainer-carlosdauden| 
 
-This module is part of the `OCA/stock-weighing <https://github.com/OCA/stock-weighing/tree/18.0/stock_weighing>`_ project on GitHub.
+This module is part of the `OCA/stock-weighing <https://github.com/OCA/stock-weighing/tree/20.0/stock_weighing>`_ project on GitHub.
 
 You are welcome to contribute. To learn how please visit https://odoo-community.org/page/Contribute.
