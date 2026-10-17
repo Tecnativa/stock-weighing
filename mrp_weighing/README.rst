@@ -2,9 +2,9 @@
    :target: https://odoo-community.org/get-involved?utm_source=readme
    :alt: Odoo Community Association
 
-====================================
-Weighing assistant in batch pickings
-====================================
+==========================================
+Weighing assistant in manufacturing orders
+==========================================
 
 .. 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -21,25 +21,51 @@ Weighing assistant in batch pickings
     :target: http://www.gnu.org/licenses/agpl-3.0-standalone.html
     :alt: License: AGPL-3
 .. |badge3| image:: https://img.shields.io/badge/github-OCA%2Fstock--weighing-lightgray.png?logo=github
-    :target: https://github.com/OCA/stock-weighing/tree/18.0/mrp_weighing
+    :target: https://github.com/OCA/stock-weighing/tree/20.0/mrp_weighing
     :alt: OCA/stock-weighing
 .. |badge4| image:: https://img.shields.io/badge/weblate-Translate%20me-F47D42.png
-    :target: https://translation.odoo-community.org/projects/stock-weighing-18-0/stock-weighing-18-0-mrp_weighing
+    :target: https://translation.odoo-community.org/projects/stock-weighing-20-0/stock-weighing-20-0-mrp_weighing
     :alt: Translate me on Weblate
 .. |badge5| image:: https://img.shields.io/badge/runboat-Try%20me-875A7B.png
-    :target: https://runboat.odoo-community.org/builds?repo=OCA/stock-weighing&target_branch=18.0
+    :target: https://runboat.odoo-community.org/builds?repo=OCA/stock-weighing&target_branch=20.0
     :alt: Try me on Runboat
 
 |badge1| |badge2| |badge3| |badge4| |badge5|
 
-Weighing production finished moves
+Weighing of manufacturing orders with the weighing assistant of
+``stock_weighing``:
 
-Possibility of closing a Manufacturing Order from Inventory Operations
+- The *Weight* button of a manufacturing order (and the *Production
+  Orders* tile of the weighing start screen) lists the operations of its
+  product and byproducts to weigh. Each weighing of the product to
+  manufacture adds to the quantity to produce, with a detailed operation
+  of its own (in its package when packages are used) to label it, and
+  removing a weight takes it out. The byproducts are produced as
+  weighed. The components are consumed as the bill of materials says for
+  the quantity produced. ``mrp_capture`` does it, so the barcode screens
+  behave the same.
+- The products of a manufacturing order can be weighed instead on the
+  transfer following it (e.g. a delivery made to order): the order
+  produces what was weighed, the component lot selected on the weighing
+  is the consumed one and gives its name to the lot produced. With
+  *Close Production* on the operation type, validating the transfer
+  marks the orders as done first.
 
 **Table of contents**
 
 .. contents::
    :local:
+
+Usage
+=====
+
+- On a confirmed manufacturing order, press *Weight* and weigh its
+  product with the *+* button of its card, as many times as packages or
+  labels are made. Mark the order as done when finished: what was
+  weighed is produced.
+- On a transfer following a manufacturing order, weigh its product
+  selecting the component lot used. Validate the transfer to close the
+  order when its operation type has *Close Production*.
 
 Known issues / Roadmap
 ======================
@@ -53,7 +79,7 @@ Bug Tracker
 Bugs are tracked on `GitHub Issues <https://github.com/OCA/stock-weighing/issues>`_.
 In case of trouble, please check there if your issue has already been reported.
 If you spotted it first, help us to smash it by providing a detailed and welcomed
-`feedback <https://github.com/OCA/stock-weighing/issues/new?body=module:%20mrp_weighing%0Aversion:%2018.0%0A%0A**Steps%20to%20reproduce**%0A-%20...%0A%0A**Current%20behavior**%0A%0A**Expected%20behavior**>`_.
+`feedback <https://github.com/OCA/stock-weighing/issues/new?body=module:%20mrp_weighing%0Aversion:%2020.0%0A%0A**Steps%20to%20reproduce**%0A-%20...%0A%0A**Current%20behavior**%0A%0A**Expected%20behavior**>`_.
 
 Do not contact contributors directly about support or help with technical issues.
 
@@ -87,6 +113,6 @@ OCA, or the Odoo Community Association, is a nonprofit organization whose
 mission is to support the collaborative development of Odoo features and
 promote its widespread use.
 
-This module is part of the `OCA/stock-weighing <https://github.com/OCA/stock-weighing/tree/18.0/mrp_weighing>`_ project on GitHub.
+This module is part of the `OCA/stock-weighing <https://github.com/OCA/stock-weighing/tree/20.0/mrp_weighing>`_ project on GitHub.
 
 You are welcome to contribute. To learn how please visit https://odoo-community.org/page/Contribute.

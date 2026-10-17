@@ -1,7 +1,7 @@
 # Copyright 2024 Tecnativa - Sergio Teruel
-# License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl.html).
+# Copyright 2026 Tecnativa - Carlos Dauden
+# License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl)
 from odoo import api, fields, models
-from odoo.tools import clean_context
 
 
 class StockMoveWeightWizard(models.TransientModel):
@@ -16,50 +16,43 @@ class StockMoveWeightWizard(models.TransientModel):
         comodel_name="stock.quant",
         compute="_compute_component_available_stock_quant_ids",
     )
-    is_production = fields.Boolean(compute="_compute_is_production", store=True)
+    is_production = fields.Boolean(
+        compute="_compute_is_production",
+        store=True,
+        help="The move belongs to the transfer following a manufacturing order",
+    )
     lot_id = fields.Many2one(compute="_compute_lot_id")
 
-    @api.depends("component_quant_id")
-    def _compute_lot_id(self):
-        res = super()._compute_lot_id()
-        for wiz in self:
-            if wiz.is_production and wiz.component_quant_id and not wiz.lot_id:
-                existed_lot = self.env["stock.lot"].search(
-                    [
-                        ("product_id", "=", wiz.product_id.id),
-                        ("company_id", "=", wiz.move_id.company_id.id),
-                        ("name", "=", wiz.component_quant_id.lot_id.name),
-                    ],
-                    limit=1,
-                )
-                if existed_lot:
-                    wiz.lot_id = existed_lot
-                else:
-                    wiz.lot_id = self.env["stock.lot"].create(
-                        {
-                            "product_id": wiz.product_id.id,
-                            "company_id": wiz.move_id.company_id.id,
-                            "name": wiz.component_quant_id.lot_id.name,
-                        }
-                    )
-        return res
+    def _origin_production(self):
+        move = self.move_id or self.selected_move_line_id.move_id
+        return move._weighing_origin_production() if move else move.production_id
 
     @api.depends("move_id")
     def _compute_is_production(self):
-        for wiz in self:
-            wiz.is_production = bool(wiz.move_id.move_orig_ids.production_id)
+        for wizard in self:
+            wizard.is_production = bool(wizard._origin_production())
+
+    @api.depends("component_quant_id")
+    def _compute_lot_id(self):
+        result = super()._compute_lot_id()
+        for wizard in self.filtered(
+            lambda w: w.is_production and w.component_quant_id and not w.lot_id
+        ):
+            wizard.lot_id = wizard._origin_production()._weighing_lot_from_component(
+                wizard.component_quant_id
+            )
+        return result
 
     @api.depends("product_id")
     def _compute_component_available_stock_quant_ids(self):
         self.component_available_stock_quant_ids = False
-        for wiz in self:
-            production = wiz.move_id.move_orig_ids.production_id
+        for wizard in self:
+            production = wizard._origin_production()
             if not production:
                 continue
-            product_ids = production.move_raw_ids.product_id.ids
-            wiz.component_available_stock_quant_ids = self.env["stock.quant"].search(
+            wizard.component_available_stock_quant_ids = self.env["stock.quant"].search(
                 [
-                    ("product_id", "in", product_ids),
+                    ("product_id", "in", production.move_raw_ids.product_id.ids),
                     ("quantity", ">", 0),
                     ("location_id.usage", "=", "internal"),
                 ],
@@ -67,71 +60,22 @@ class StockMoveWeightWizard(models.TransientModel):
                 limit=5,
             )
 
-    def _sync_production_weight(self, production):
-        production.lot_producing_id = self.lot_id
-        selected_component_lot = production.move_raw_ids.move_line_ids.filtered(
-            lambda line: (
-                line.product_id == self.component_quant_id.product_id
-                and line.lot_id == self.component_quant_id.lot_id
-            )
-        )
-        if not selected_component_lot:
-            move_component = production.move_raw_ids.filtered(
-                lambda r: r.product_id == self.component_quant_id.product_id
-            )
-            # We need to clean the context because the weighing wizard has own
-            # context keys that can cause issues when writing on the production order
-            selected_component_lot = self.env["stock.move.line"].create(
-                {
-                    "move_id": move_component.id,
-                    "product_id": self.component_quant_id.product_id.id,
-                    "lot_id": self.component_quant_id.lot_id.id,
-                    "product_uom_id": self.component_quant_id.product_id.uom_id.id,
-                    "location_id": move_component.location_id.id,
-                    "location_dest_id": move_component.location_dest_id.id,
-                    "company_id": self.env.company.id,
-                }
-            )
-        self.selected_move_line_id.selected_quant_id = self.component_quant_id
-        selected_component_lot.lot_id = self.component_quant_id.lot_id
-        other_component_lots = production.move_raw_ids.move_line_ids.filtered(
-            lambda line: (
-                line.product_id == self.component_quant_id.product_id
-                and line.lot_id != self.component_quant_id.lot_id
-                and line.qty_picked > 0
-            )
-        )
-        if other_component_lots:
-            qty_done = production.move_raw_ids.should_consume_qty - sum(
-                other_component_lots.mapped("qty_picked")
-            )
-        else:
-            qty_done = production.move_raw_ids.should_consume_qty
-        # pylint: disable=W8121
-        # Force context to remove default_move_id when analytic line is created
-        selected_component_lot.with_context(clean_context(self._context)).write(
-            {"qty_picked": qty_done}
-        )
-
     def add_operation_and_record(self):
-        self = self.with_context(show_lot_product=True)
-        return super().add_operation_and_record()
+        return super(
+            StockMoveWeightWizard, self.with_context(show_lot_product=True)
+        ).add_operation_and_record()
 
     def record_weight(self):
+        line = self.selected_move_line_id
+        move = line.move_id
+        component_quant = self.component_quant_id or line.selected_quant_id
+        lot = self.lot_id
         action = super().record_weight()
-        sm = self.selected_move_line_id.move_id
-        production_id = self.move_id.move_orig_ids.production_id
-        if sm.product_id == sm.production_id.product_id:
-            # The production picks its finished moves when it is done, as a
-            # picked finished move is taken as already produced
-            self.selected_move_line_id.with_context(
-                move_line_pick_qty=True
-            ).picked = False
-            sm.production_id._set_weighed_qty_producing(clear_if_unweighed=True)
-            return action
-        if production_id:
-            production_id.qty_producing = sm.qty_picked
-            if self.selected_move_line_id.selected_quant_id:
-                self.component_quant_id = self.selected_move_line_id.selected_quant_id
-            self._sync_production_weight(production_id)
+        production = move._weighing_origin_production()
+        if production and production.state not in ("done", "cancel"):
+            if component_quant and line.exists():
+                line.selected_quant_id = component_quant
+            production._weighing_sync_from_transfer(
+                move, component_quant=component_quant, lot=lot
+            )
         return action

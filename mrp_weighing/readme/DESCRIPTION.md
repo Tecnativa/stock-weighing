@@ -1,3 +1,4 @@
-Weighing production finished moves
+Weighing of manufacturing orders with the weighing assistant of `stock_weighing`:
 
-Possibility of closing a Manufacturing Order from Inventory Operations
+- The *Weight* button of a manufacturing order (and the *Production Orders* tile of the weighing start screen) lists the operations of its product and byproducts to weigh. Each weighing of the product to manufacture adds to the quantity to produce, with a detailed operation of its own (in its package when packages are used) to label it, and removing a weight takes it out. The byproducts are produced as weighed. The components are consumed as the bill of materials says for the quantity produced. `mrp_capture` does it, so the barcode screens behave the same.
+- The products of a manufacturing order can be weighed instead on the transfer following it (e.g. a delivery made to order): the order produces what was weighed, the component lot selected on the weighing is the consumed one and gives its name to the lot produced. With *Close Production* on the operation type, validating the transfer marks the orders as done first.

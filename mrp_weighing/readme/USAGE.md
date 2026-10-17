@@ -1,0 +1,2 @@
+- On a confirmed manufacturing order, press *Weight* and weigh its product with the *+* button of its card, as many times as packages or labels are made. Mark the order as done when finished: what was weighed is produced.
+- On a transfer following a manufacturing order, weigh its product selecting the component lot used. Validate the transfer to close the order when its operation type has *Close Production*.

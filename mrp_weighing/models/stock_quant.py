@@ -1,19 +1,19 @@
-from odoo import models
+# Copyright 2024 Tecnativa - Sergio Teruel
+# Copyright 2026 Tecnativa - Carlos Dauden
+# License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl)
+from odoo import api, models
 
 
 class StockQuant(models.Model):
     _inherit = "stock.quant"
 
-    def name_get(self):
+    @api.depends_context("show_lot_product")
+    def _compute_display_name(self):
         if not self.env.context.get("show_lot_product"):
-            return super().name_get()
-
-        result = []
-        for rec in self:
-            name = (
-                f"{rec.lot_id.name or ''} - "
-                f"{rec.location_id.display_name}/{rec.product_id.display_name} "
-                f"({rec.quantity} {rec.product_uom_id.name})"
+            return super()._compute_display_name()
+        for quant in self:
+            quant.display_name = (
+                f"{quant.lot_id.name or ''} - "
+                f"{quant.location_id.display_name}/{quant.product_id.display_name} "
+                f"({quant.quantity} {quant.uom_id.name})"
             )
-            result.append((rec.id, name))
-        return result

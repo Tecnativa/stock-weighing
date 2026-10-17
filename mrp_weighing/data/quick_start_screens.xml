@@ -13,7 +13,7 @@
         <field
             name="context"
         >{"search_default_todo": True, 'quick_start_screen_type':'production_order'}</field>
-        <field name="icon_name">fa-wrench</field>
+        <field name="icon_name">build</field>
         <field name="color" eval="7" />
     </record>
     <record id="stock_weighing.quick_start_screen_weighing" model="quick.start.screen">
