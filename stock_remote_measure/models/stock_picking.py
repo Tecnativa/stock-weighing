@@ -10,7 +10,7 @@ class StockPicking(models.Model):
         comodel_name="remote.measure.device",
         default=lambda self: (
             self.env["stock.picking.type"]
-            .browse(self._context.get("default_picking_type_id"))
+            .browse(self.env.context.get("default_picking_type_id"))
             .remote_scale_id
         ),
     )

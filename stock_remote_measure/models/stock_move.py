@@ -16,23 +16,28 @@ class StockMove(models.Model):
         "picking_id",
         "picking_id.picking_type_id.remote_scale_id",
         "picking_id.remote_scale_id",
-        "product_uom",
+        "uom_id",
     )
+    @api.depends_context("force_user_measure_device", "uid")
     def _compute_remote_scale_id(self):
-        """Avoid measuring when the scale and move UoMs are in different categories."""
-        for move in self:
-            picking_scale = (
-                move.picking_id.remote_scale_id
-                or move.picking_id.picking_type_id.remote_scale_id
-            )
-            scale = (
-                move.product_uom.category_id == picking_scale.uom_id.category_id
-                and picking_scale
-            )
-            if not scale and self.env.context.get("force_user_measure_device"):
-                scale = (
-                    move.product_uom.category_id
-                    == self.env.user.remote_measure_device_id.uom_id.category_id
-                    and self.env.user.remote_measure_device_id
-                )
-            move.remote_scale_id = scale or False
+        """Avoid measuring when the scale and move units are not compatible."""
+        for record in self:
+            record.remote_scale_id = record._remote_scale_for(record.uom_id)
+
+    def _remote_scale_for(self, uom):
+        """Scale of the transfer, or of the user when forced, measuring in a
+        unit compatible with the given one"""
+        picking_scale = (
+            self.picking_id.remote_scale_id
+            or self.picking_id.picking_type_id.remote_scale_id
+        )
+        if picking_scale and uom._has_common_reference(picking_scale.uom_id):
+            return picking_scale
+        user_scale = self.env.user.remote_measure_device_id
+        if (
+            self.env.context.get("force_user_measure_device")
+            and user_scale
+            and uom._has_common_reference(user_scale.uom_id)
+        ):
+            return user_scale
+        return self.env["remote.measure.device"]

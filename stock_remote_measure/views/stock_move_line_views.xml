@@ -14,7 +14,7 @@
                 <attribute name="widget">remote_measure</attribute>
                 <attribute
                     name="options"
-                >{'remote_device_field': 'remote_scale_id', 'uom_field': 'product_uom_id', 'default_user_device': True, 'allow_additive_measure': True}</attribute>
+                >{'remote_device_field': 'remote_scale_id', 'uom_field': 'uom_id', 'default_user_device': True, 'allow_additive_measure': True}</attribute>
             </field>
         </field>
     </record>
@@ -29,7 +29,7 @@
                 <attribute name="widget">remote_measure</attribute>
                 <attribute
                     name="options"
-                >{'remote_device_field': 'remote_scale_id', 'uom_field': 'product_uom_id', 'default_user_device': True, 'allow_additive_measure': True}</attribute>
+                >{'remote_device_field': 'remote_scale_id', 'uom_field': 'uom_id', 'default_user_device': True, 'allow_additive_measure': True}</attribute>
             </field>
         </field>
     </record>
@@ -44,7 +44,7 @@
                 <attribute name="widget">remote_measure</attribute>
                 <attribute
                     name="options"
-                >{'remote_device_field': 'remote_scale_id', 'uom_field': 'product_uom_id', 'default_user_device': True, 'allow_additive_measure': True}</attribute>
+                >{'remote_device_field': 'remote_scale_id', 'uom_field': 'uom_id', 'default_user_device': True, 'allow_additive_measure': True}</attribute>
             </field>
         </field>
     </record>

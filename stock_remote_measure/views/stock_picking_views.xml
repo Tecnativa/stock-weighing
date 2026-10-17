@@ -8,19 +8,19 @@
                 <field name="remote_scale_id" readonly="state == 'done'" />
             </group>
             <xpath
-                expr="//field[@name='move_ids_without_package']/list/field[@name='quantity']"
+                expr="//field[@name='move_ids']/list/field[@name='quantity']"
                 position="before"
             >
                 <field name="remote_scale_id" column_invisible="True" />
             </xpath>
             <xpath
-                expr="//field[@name='move_ids_without_package']/list/field[@name='quantity']"
+                expr="//field[@name='move_ids']/list/field[@name='quantity']"
                 position="attributes"
             >
                 <attribute name="widget">remote_measure</attribute>
                 <attribute
                     name="options"
-                >{'remote_device_field': 'remote_scale_id', 'uom_field': 'product_uom', 'default_user_device': True, 'allow_additive_measure': True}</attribute>
+                >{'remote_device_field': 'remote_scale_id', 'uom_field': 'uom_id', 'default_user_device': True, 'allow_additive_measure': True}</attribute>
             </xpath>
         </field>
     </record>
