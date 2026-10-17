@@ -12,7 +12,13 @@
         "stock_weighing",
         "web_widget_remote_measure",
     ],
-    "data": ["wizards/weighing_wizard_views.xml"],
+    "data": [
+        "security/ir.access.csv",
+        "data/weighing_tare_data.xml",
+        "views/weighing_tare_views.xml",
+        "wizards/weighing_wizard_views.xml",
+        "wizards/weighing_tare_wizard_views.xml",
+    ],
     "assets": {
         "web.assets_backend": [
             "stock_weighing_remote_measure/static/src/**/*.esm.js",
