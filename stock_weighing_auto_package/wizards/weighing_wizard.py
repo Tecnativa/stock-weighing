@@ -23,12 +23,10 @@ class WeighingWizard(models.TransientModel):
                 wiz.stock_weighing_auto_package
             )
 
-    def _post_add_detailed_operation(self):
-        res = super()._post_add_detailed_operation()
-        if self.result_package_id:
-            self.selected_move_line_id.result_package_id = self.result_package_id
-        elif self.stock_weighing_auto_package:
-            self.selected_move_line_id.result_package_id = self.env[
-                "stock.quant.package"
-            ].create({})
-        return res
+    def _get_capture_values(self):
+        """Each weighing goes to a new package of its own when the product
+        asks for it and no package is chosen"""
+        values = super()._get_capture_values()
+        if not self.result_package_id and self.stock_weighing_auto_package:
+            values["result_package"] = self.env["stock.package"].create({})
+        return values
