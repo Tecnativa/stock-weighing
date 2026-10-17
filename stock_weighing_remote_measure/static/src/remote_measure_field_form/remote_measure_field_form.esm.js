@@ -63,7 +63,8 @@ export class RemoteMeasureForm extends RemoteMeasureField {
     }
 
     get extraMeasures() {
-        return super.extraMeasures + this.measureState.tare;
+        // The tare is subtracted from the measured weight
+        return super.extraMeasures - this.measureState.tare;
     }
 
     get uomName() {
