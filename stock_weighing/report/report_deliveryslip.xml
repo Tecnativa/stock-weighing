@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
     <template id="report_delivery_document" inherit_id="stock.report_delivery_document">
         <xpath expr="//span[@t-field='move.quantity']" position="attributes">
@@ -9,8 +9,8 @@
         <xpath expr="//span[@t-field='move.quantity']" position="before">
             <span
                 t-if="move.qty_picked and move.state != 'done'"
-                t-field="move.qty_picked"
                 class="text-nowrap"
+                t-field="move.qty_picked"
             />
         </xpath>
     </template>
@@ -26,8 +26,8 @@
         <xpath expr="//span[@t-field='move_line.quantity']" position="before">
             <span
                 t-if="move_line.qty_picked and move_line.state != 'done'"
-                t-field="move_line.qty_picked"
                 class="text-nowrap"
+                t-field="move_line.qty_picked"
             />
         </xpath>
     </template>

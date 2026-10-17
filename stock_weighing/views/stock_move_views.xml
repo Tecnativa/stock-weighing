@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
     <!-- A kanban with no borders so the usability is more like a tree -->
     <record id="view_move_weight_kanban_view" model="ir.ui.view">
@@ -126,11 +126,11 @@
                                         class="d-flex flex-column flex-xl-row align-items-center gap-2"
                                     >
                                         <button
+                                            t-if="record.move_lines_count.raw_value === 1"
+                                            class="btn btn-lg border"
                                             string="Record weight"
                                             name="action_weighing"
                                             type="object"
-                                            class="btn btn-lg border"
-                                            t-if="record.move_lines_count.raw_value === 1"
                                         >
                                             <i
                                                 t-attf-class="fa {{record.recorded_weight.raw_value ? 'fa-refresh text-success' : 'fa-circle text-danger'}}"
@@ -138,33 +138,33 @@
                                         </button>
                                         <!-- We can't do a t-attf-name -->
                                         <button
+                                            t-elif="record.move_lines_count.raw_value &gt; 1 &amp;&amp; !context.hide_weight_detail_buttons"
+                                            class="btn btn-lg border"
                                             string="Record weight"
                                             name="action_weight_detailed_operations"
                                             type="object"
-                                            class="btn btn-lg border"
-                                            t-elif="record.move_lines_count.raw_value &gt; 1 &amp;&amp; !context.hide_weight_detail_buttons"
                                         >
                                             <i
                                                 t-attf-class="fa {{record.recorded_weight.raw_value &amp;&amp; record.weighing_state.raw_value == 'weighed' ? 'fa-refresh text-success' : 'fa-circle text-danger'}}"
                                             />
                                         </button>
                                         <button
+                                            t-elif="record.move_lines_count.raw_value &gt; 1 &amp;&amp; context.hide_weight_detail_buttons &amp;&amp; record.weighing_state.raw_value === 'weighing'"
+                                            class="btn btn-lg border"
                                             string="Force weighed"
                                             title="Force weighed"
                                             name="action_force_weighed"
                                             type="object"
-                                            class="btn btn-lg border"
-                                            t-elif="record.move_lines_count.raw_value &gt; 1 &amp;&amp; context.hide_weight_detail_buttons &amp;&amp; record.weighing_state.raw_value === 'weighing'"
                                         >
                                             <i class="fa fa-check text-success" />
                                         </button>
                                         <button
+                                            t-if="!record.has_weight.raw_value and record.quantity.raw_value !== record.qty_picked.raw_value"
+                                            class="btn btn-lg border"
                                             string="Set reserved to done"
                                             title="Set reserved to done"
                                             name="set_product_uom_qty_to_qty_done_from_weighing"
                                             type="object"
-                                            class="btn btn-lg border"
-                                            t-if="!record.has_weight.raw_value and record.quantity.raw_value !== record.qty_picked.raw_value"
                                         >
                                             <i class="fa fa-arrow-right text-success" />
                                         </button>
@@ -211,29 +211,29 @@
                                         <!-- Hidden for the moment -->
                                         <button
                                             t-if="!['done', 'cancel', 'draft'].includes(record.state.raw_value)"
+                                            class="btn btn-secondary btn-lg"
                                             type="object"
                                             name="action_add_move_line"
                                             title="Add operation"
-                                            class="btn btn-secondary btn-lg"
                                         >
                                             <i class="fa fa-plus" />
                                         </button>
                                         <button
                                             t-if="!['done', 'cancel', 'draft'].includes(record.state.raw_value)"
+                                            class="ms-1 btn btn-secondary btn-lg"
                                             type="object"
                                             name="action_reset_weights"
                                             title="Reset weights"
-                                            class="ms-1 btn btn-secondary btn-lg"
                                             confirm="This will reset your current weight. Proceed?"
                                         >
                                             <i class="fa fa-times" />
                                         </button>
                                         <button
                                             t-if="record.is_weighing_operation_locked.raw_value"
+                                            class="ms-1 btn-danger btn btn-lg"
                                             type="object"
                                             name="action_unlock_weigh_operation"
                                             title="Unlock weight operation"
-                                            class="ms-1 btn-danger btn btn-lg"
                                         >
                                             <i class="fa fa-lock" />
                                         </button>
@@ -255,9 +255,9 @@
                                     <div>
                                         <button
                                             t-if="(!single_move_line &amp;&amp; !context.hide_weight_detail_buttons) || context.show_weight_detail_buttons"
+                                            t-attf-class="btn btn-lg {{single_move_line ? 'btn-secondary' : 'btn-primary'}}"
                                             type="object"
                                             name="action_weight_detailed_operations"
-                                            t-attf-class="btn btn-lg {{single_move_line ? 'btn-secondary' : 'btn-primary'}}"
                                             title="Details"
                                         >
                                             <i

@@ -1,8 +1,8 @@
-<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
     <record id="stock_move_line_weight_kanban_view" model="ir.ui.view">
         <field name="model">stock.move.line</field>
-        <field name="priority">20</field>
+        <field name="priority" eval="20" />
         <field name="arch" type="xml">
             <kanban class="o_weight_kanban">
                 <field name="product_id" />
@@ -101,10 +101,10 @@
                                     <div>
                                         <button
                                             t-if="!['done', 'cancel', 'draft'].includes(record.state.raw_value)"
+                                            class="btn btn-secondary btn-lg"
                                             type="object"
                                             name="action_reset_weights"
                                             title="Reset weights"
-                                            class="btn btn-secondary btn-lg"
                                             confirm="This will reset your current weight. Proceed?"
                                         >
                                             <i class="fa fa-times" />

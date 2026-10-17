@@ -11,8 +11,8 @@
         >
             <button
                 t-if="!props.readonly &amp;&amp; props.record.resModel === 'weighing.wizard' &amp;&amp; props.name === 'quant_id' &amp;&amp; props.record.data.quant_id"
-                type="button"
                 class="btn btn-primary ms-1 fa fa-trash o_weighing_clear_quant_btn"
+                type="button"
                 t-on-click="onClickClearQuant"
                 title="Clear source stock"
                 aria-label="Clear source stock"

@@ -114,9 +114,11 @@ class StockMove(models.Model):
         """Out own operations won't show up as locked"""
         self.is_weighing_operation_locked = False
         self.filtered(
-            lambda x: x.state not in {"cancel", "draft", "done"}
-            and x.weighing_user_id
-            and x.weighing_user_id != self.env.user
+            lambda x: (
+                x.state not in {"cancel", "draft", "done"}
+                and x.weighing_user_id
+                and x.weighing_user_id != self.env.user
+            )
         ).is_weighing_operation_locked = True
 
     @api.depends("qty_picked", "picking_type_id.weighing_label_report_id")

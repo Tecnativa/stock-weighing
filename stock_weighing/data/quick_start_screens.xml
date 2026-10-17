@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <odoo noupdate="1">
     <record
         id="quick_start_screen_action_incoming_any_operations"
@@ -14,7 +14,7 @@
         ]</field>
         <field name="context">{'show_weight_detail_buttons': True}</field>
         <field name="icon_name">fa-arrow-down</field>
-        <field name="color">7</field>
+        <field name="color" eval="7" />
     </record>
     <record
         id="quick_start_screen_action_outgoing_any_operations"
@@ -30,7 +30,7 @@
         ]</field>
         <field name="context">{'show_weight_detail_buttons': True}</field>
         <field name="icon_name">fa-arrow-right</field>
-        <field name="color">7</field>
+        <field name="color" eval="7" />
     </record>
     <record
         id="quick_start_screen_action_interwarehouse_any_operations"
@@ -46,7 +46,7 @@
         ]</field>
         <field name="context">{'show_weight_detail_buttons': True}</field>
         <field name="icon_name">fa-arrows-h</field>
-        <field name="color">7</field>
+        <field name="color" eval="7" />
     </record>
     <record id="quick_start_screen_weighing" model="quick.start.screen">
         <field name="name">Weighing</field>
