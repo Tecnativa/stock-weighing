@@ -2,7 +2,7 @@
 <odoo>
     <record id="stock_picking_batch_form" model="ir.ui.view">
         <field name="model">stock.picking.batch</field>
-        <field name="inherit_id" ref="stock_picking_batch.stock_picking_batch_form" />
+        <field name="inherit_id" ref="stock.stock_picking_batch_form" />
         <field name="arch" type="xml">
             <div name="button_box" position="inside">
                 <field name="weighing_operations" invisible="1" />
@@ -12,28 +12,28 @@
                     string="Weigh"
                     type="object"
                     class="oe_stat_button"
-                    icon="fa-thermometer-half "
+                    icon="device_thermostat"
                     invisible="not weighing_operations or not has_weighing_operations or state in ['draft', 'cancel']"
                 />
             </div>
         </field>
     </record>
-    <record id="stock_picking_batch_kanban" model="ir.ui.view">
+    <record id="stock_picking_batch_card" model="ir.ui.view">
         <field name="model">stock.picking.batch</field>
-        <field name="inherit_id" ref="stock_picking_batch.stock_picking_batch_kanban" />
+        <field name="inherit_id" ref="stock.stock_picking_batch_card" />
         <field name="arch" type="xml">
-            <field name="state" position="after">
-                <field name="has_weighing_operations" invisible="1" />
+            <field name="picking_ids" position="after">
+                <field name="has_weighing_operations" />
             </field>
-            <xpath expr="//footer[hasclass('pt-0')]" position="inside">
+            <xpath expr="//footer/div[hasclass('d-flex')]" position="inside">
                 <button
                     t-if="record.has_weighing_operations.raw_value"
-                    class="btn btn-primary"
+                    class="btn btn-sm btn-primary"
                     name="action_weighing_operations"
                     type="object"
                     title="Weighings"
                 >
-                    <i class="fa fa-thermometer" />
+                    <i class="oi" data-icon="device_thermostat" />
                 </button>
             </xpath>
         </field>

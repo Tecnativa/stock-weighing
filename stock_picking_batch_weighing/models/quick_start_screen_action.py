@@ -1,7 +1,7 @@
 # Copyright 2025 Tecnativa - Carlos Roca
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl.html).
 from odoo import models
-from odoo.osv import expression
+from odoo.fields import Domain
 from odoo.tools.safe_eval import safe_eval
 
 
@@ -23,14 +23,14 @@ class QuickStartScreenAction(models.Model):
         any_operation_actions = (
             self.env["ir.config_parameter"]
             .sudo()
-            .get_param("stock_weighing.any_operation_actions")
+            .get_bool("stock_weighing.any_operation_actions")
         )
         res = self.env["stock.move"].action_stock_batch_picking_weighing()
         base_domain = res.get("domain") or []
         if isinstance(base_domain, str):
             base_domain = safe_eval(base_domain)
         if not any_operation_actions:
-            res["domain"] = expression.AND(
-                [base_domain, [("has_weighing_operations", "=", True)]]
+            res["domain"] = list(
+                Domain.AND([base_domain, [("has_weighing_operations", "=", True)]])
             )
         return res

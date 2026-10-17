@@ -13,7 +13,7 @@
         ]</field>
         <field name="action_ref_id" ref="stock_weighing.weighing_operation_action" />
         <field name="context">{'show_weight_detail_buttons': True}</field>
-        <field name="icon_name">fa-truck</field>
+        <field name="icon_name">local_shipping</field>
         <field name="color" eval="7" />
     </record>
     <record id="stock_weighing.quick_start_screen_weighing" model="quick.start.screen">

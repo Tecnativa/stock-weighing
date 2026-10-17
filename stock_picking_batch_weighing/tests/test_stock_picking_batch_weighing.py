@@ -1,5 +1,6 @@
 from lxml import etree
 
+from odoo import Command
 from odoo.tests import TransactionCase, tagged
 
 
@@ -42,10 +43,9 @@ class TestStockPickingBatchWeighing(TransactionCase):
         )
         cls.move_weighted = cls.env["stock.move"].create(
             {
-                "name": "Move weighted",
                 "product_id": cls.product_weighted.id,
                 "product_uom_qty": 2.0,
-                "product_uom": cls.product_weighted.uom_id.id,
+                "uom_id": cls.product_weighted.uom_id.id,
                 "picking_id": cls.picking_1.id,
                 "location_id": cls.stock_location.id,
                 "location_dest_id": cls.customer_location.id,
@@ -70,13 +70,51 @@ class TestStockPickingBatchWeighing(TransactionCase):
             lambda a: a.name == "Batch Picking"
         )
         self.assertTrue(batch_action, "Batch Picking action not found in start screen")
-        self.assertEqual(batch_action["icon_name"], "fa-truck")
+        self.assertEqual(batch_action["icon_name"], "local_shipping")
 
     def test_kanban_contains_action_weighing_operations_button(self):
-        model = self.env["stock.picking.batch"]
-        view = self.env.ref("stock_picking_batch.stock_picking_batch_kanban")
-        result = model.get_view(view_id=view.id, view_type="kanban")
-        arch = etree.fromstring(result["arch"].encode())
+        # The kanban of batches shows their card view
+        view = self.env.ref("stock.stock_picking_batch_card")
+        arch = etree.fromstring(view.get_combined_arch().encode())
         buttons = arch.xpath("//button[@name='action_weighing_operations']")
         self.assertTrue(buttons)
         self.assertEqual(buttons[0].get("type"), "object")
+
+    def test_batch_pickings_start_screen(self):
+        product_kg = self.env["product.product"].create(
+            {
+                "name": "Product sold by weight",
+                "type": "consu",
+                "uom_id": self.env.ref("uom.product_uom_kgm").id,
+            }
+        )
+        picking = self.env["stock.picking"].create(
+            {
+                "partner_id": self.partner.id,
+                "picking_type_id": self.picking_type.id,
+                "location_id": self.stock_location.id,
+                "location_dest_id": self.customer_location.id,
+                "move_ids": [
+                    Command.create(
+                        {
+                            "product_id": product_kg.id,
+                            "product_uom_qty": 3.0,
+                            "uom_id": product_kg.uom_id.id,
+                            "location_id": self.stock_location.id,
+                            "location_dest_id": self.customer_location.id,
+                        }
+                    )
+                ],
+            }
+        )
+        batch_to_weigh = self.env["stock.picking.batch"].create(
+            {"company_id": self.company.id, "picking_ids": [Command.set(picking.ids)]}
+        )
+        tile = self.env.ref(
+            "stock_picking_batch_weighing."
+            "quick_start_screen_action_batch_picking_any_operations"
+        )
+        action = tile.run_action()
+        batches = self.env["stock.picking.batch"].search(action["domain"])
+        self.assertIn(batch_to_weigh, batches)
+        self.assertNotIn(self.batch, batches)

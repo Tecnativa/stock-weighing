@@ -10,7 +10,7 @@ class StockMove(models.Model):
     def action_stock_batch_picking_weighing(self):
         """Used in the start screen"""
         action = self.env["ir.actions.act_window"]._for_xml_id(
-            "stock_picking_batch.stock_picking_batch_action"
+            "stock.stock_picking_batch_action"
         )
         action["views"] = [[False, "kanban"], [False, "list"]]
         return action
