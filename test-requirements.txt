@@ -1,0 +1,4 @@
+odoo-addon-stock_capture @ git+https://github.com/Tecnativa/stock-logistics-barcode@20.0-ADD-stock_capture#subdirectory=stock_capture
+odoo-addon-web_quick_start_screen @ git+https://github.com/Tecnativa/web@20.0-mig-web_quick_start_screen#subdirectory=web_quick_start_screen
+odoo-addon-web_filter_header_button @ git+https://github.com/Tecnativa/web@20.0-mig-web_filter_header_button#subdirectory=web_filter_header_button
+odoo-addon-web_widget_numeric_step @ git+https://github.com/Tecnativa/web@20.0-mig-web_widget_numeric_step#subdirectory=web_widget_numeric_step
