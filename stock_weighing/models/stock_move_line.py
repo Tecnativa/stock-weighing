@@ -66,8 +66,9 @@ class StockMoveLine(models.Model):
 
     def action_reset_weights(self):
         """Restore stock move lines weights"""
-        for line in self.filtered(lambda ml: ml.picked or ml.has_recorded_weight):
-            line._capture_set_quantity(0)
+        self.filtered(
+            lambda ml: ml.picked or ml.has_recorded_weight
+        ).action_capture_undo()
         # Some captures drop their line when undone, e.g. the finished lines of
         # a manufacturing order
         self.exists().write({"recorded_weight": 0, "has_recorded_weight": False})

@@ -177,6 +177,7 @@ Contributors
   - David Vidal
   - Sergio Teruel
   - Carlos Roca
+  - Carlos Dauden
 
 Maintainers
 -----------

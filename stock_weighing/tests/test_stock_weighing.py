@@ -197,7 +197,10 @@ class TestStockWeighing(TransactionCase):
         # Without any weight the reserved quantities are validated as usual
         picking = self._create_delivery(self.product_kg)
         self._record_weight(picking.move_line_ids, 8.5)
+        self.assertEqual(len(picking.move_line_ids), 2)
         picking.move_ids.action_reset_weights()
+        # The weighed part joins the rest of the operation again
+        self.assertEqual(picking.move_line_ids.mapped("quantity"), [10])
         self.assertFalse(any(picking.move_line_ids.mapped("picked")))
         self.assertFalse(any(picking.move_line_ids.mapped("has_recorded_weight")))
         self.assertEqual(picking.move_ids.captured_quantity, 0)
