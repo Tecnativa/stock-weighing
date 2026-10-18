@@ -13,7 +13,7 @@ import {
     onWillUnmount,
     proxy,
     t,
-    useEffect,
+    useOnChange,
     useProps,
 } from "@odoo/owl";
 import {_t} from "@web/core/l10n/translation";
@@ -80,22 +80,23 @@ export class RemoteMeasureField extends FloatField {
             await this._assignDevice();
         });
         // Reset states when we leave the button
-        useEffect(
+        // Owl 3 effects take no dependencies: react to their changes instead
+        useOnChange(
+            () => [this.props.readonly],
             (readonly) => {
                 if (readonly) {
                     this.measureState.stop = true;
                     this.measureState.measuring = false;
                 }
-            },
-            () => [this.props.readonly]
+            }
         );
-        useEffect(
+        useOnChange(
+            () => [this.value],
             (value) => {
                 if (value > 0 && this.props.allow_additive_measure) {
                     this.measureState.additive_measure = true;
                 }
-            },
-            () => [this.value]
+            }
         );
         onWillDestroy(() => this._closeSocket());
         onWillUnmount(() => this._closeSocket());
